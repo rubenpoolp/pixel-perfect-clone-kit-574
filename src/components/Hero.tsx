@@ -66,11 +66,17 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
           </div>
           <button
             type="submit"
-            className="hover:scale-105 transition-transform"
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+              searchQuery.trim() 
+                ? 'bg-black hover:bg-gray-800' 
+                : 'bg-gray-300 hover:bg-gray-400'
+            }`}
           >
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/2be089ad9905a0a554adf52ae105b290c1c24802?placeholderIfAbsent=true"
-              className="aspect-[1] object-contain w-8 shrink-0 rounded-full"
+              className={`aspect-[1] object-contain w-4 shrink-0 transition-all duration-200 ${
+                searchQuery.trim() ? 'filter invert' : ''
+              }`}
               alt="Submit"
             />
           </button>
