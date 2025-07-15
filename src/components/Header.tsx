@@ -6,7 +6,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   return (
-    <header className={`bg-[rgba(252,251,248,0.75)] flex w-full flex-col items-center pt-4 pb-[9px] px-[70px] max-md:max-w-full max-md:px-5 ${className}`}>
+    <header className={`bg-[rgba(252,251,248,0.75)] backdrop-blur-sm sticky top-0 z-50 flex w-full flex-col items-center pt-4 pb-[9px] px-[70px] max-md:max-w-full max-md:px-5 ${className}`}>
       <div className="flex w-full max-w-[1200px] gap-5 flex-wrap justify-between max-md:max-w-full">
         <img 
           src="/lovable-uploads/dc904fb1-598d-43de-8bdd-4fcf664e5108.png" 
