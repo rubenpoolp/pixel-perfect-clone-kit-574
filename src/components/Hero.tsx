@@ -41,7 +41,8 @@ export const Hero: React.FC<HeroProps> = ({
           
         </div>
         
-        <div className="flex items-stretch gap-4 sm:gap-10 text-xs sm:text-sm font-medium text-center flex-wrap mt-8 sm:mt-12 lg:mt-[60px]">
+        {/* Desktop suggestions - hidden on mobile */}
+        <div className="hidden sm:flex items-stretch gap-4 sm:gap-10 text-xs sm:text-sm font-medium text-center flex-wrap mt-8 sm:mt-12 lg:mt-[60px]">
           <div className="flex items-stretch gap-5 flex-wrap grow shrink basis-auto">
             {suggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => setSearchQuery(suggestion.text)} className="bg-[rgba(247,244,237,1)] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] border flex items-stretch gap-1 text-black leading-relaxed px-2 sm:px-[13px] py-1.5 sm:py-2 rounded-full border-[rgba(236,234,228,1)] border-solid hover:bg-[rgba(236,234,228,1)] transition-colors text-xs sm:text-sm">
                 <img src={suggestion.icon} className="aspect-[1] object-contain w-3 sm:w-4 shrink-0" alt="" />
@@ -54,6 +55,25 @@ export const Hero: React.FC<HeroProps> = ({
             <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
           </button>
         </div>
+
+        {/* Mobile submit button - shown only on mobile */}
+        <div className="flex sm:hidden justify-end mt-4">
+          <button type="submit" className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${searchQuery.trim() ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 hover:bg-gray-500'}`}>
+            <ArrowUp className="w-3 h-3 text-white" />
+          </button>
+        </div>
       </form>
+
+      {/* Mobile suggestions - shown only on mobile, outside the form */}
+      <div className="flex sm:hidden items-stretch gap-4 text-xs font-medium text-center flex-wrap mt-6 self-center w-full max-w-[768px] px-4">
+        <div className="flex items-stretch gap-3 flex-wrap grow shrink basis-auto">
+          {suggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => setSearchQuery(suggestion.text)} className="bg-[rgba(247,244,237,1)] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] border flex items-stretch gap-1 text-black leading-relaxed px-2 py-1.5 rounded-full border-[rgba(236,234,228,1)] border-solid hover:bg-[rgba(236,234,228,1)] transition-colors text-xs">
+              <img src={suggestion.icon} className="aspect-[1] object-contain w-3 shrink-0" alt="" />
+              <span className="basis-auto grow shrink">
+                {suggestion.text}
+              </span>
+            </button>)}
+        </div>
+      </div>
     </section>;
 };
