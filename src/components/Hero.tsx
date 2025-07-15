@@ -5,7 +5,7 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({
   className = ''
 }) => {
-  const [searchQuery, setSearchQuery] = useState('Ask Clutch to optimize conversions by giving insights through heatmaps');
+  const [searchQuery, setSearchQuery] = useState('');
   const suggestions = [{
     icon: 'https://cdn.builder.io/api/v1/image/assets/TEMP/d18eb418fc165b4bf968bc92fd27747fe76ee458?placeholderIfAbsent=true',
     text: 'How competitors are dealing with subscriptions ?'
