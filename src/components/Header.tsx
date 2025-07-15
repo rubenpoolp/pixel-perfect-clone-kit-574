@@ -11,7 +11,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         <img 
           src="/lovable-uploads/dc904fb1-598d-43de-8bdd-4fcf664e5108.png" 
           alt="Jackie Logo" 
-          className="h-8 w-auto object-contain"
+          className="h-12 w-auto object-contain"
         />
         <button onClick={() => window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank')} className="bg-[rgba(28,28,28,1)] flex flex-col items-stretch text-lg text-[rgba(252,251,248,1)] font-medium text-center leading-none justify-center px-8 py-[11px] rounded-md max-md:px-5 hover:bg-[rgba(28,28,28,0.9)] transition-colors">
           <div>Request a demo</div>
