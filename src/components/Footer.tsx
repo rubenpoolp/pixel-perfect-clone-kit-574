@@ -11,8 +11,8 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
   ];
 
   return (
-    <footer className={`bg-[rgba(252,251,248,1)] self-stretch flex w-full flex-col mt-[189px] pl-8 pr-20 pt-[35px] pb-[139px] rounded-[20px] border-[rgba(247,244,237,1)] border-solid border-2 max-md:max-w-full max-md:mt-10 max-md:pb-[100px] max-md:px-5 ${className}`}>
-      <nav className="mt-[68px] max-md:mt-10">
+    <footer className={`bg-[rgba(252,251,248,1)] self-stretch flex w-full flex-col mt-[189px] pl-8 pr-20 pt-[20px] pb-[40px] rounded-[20px] border-[rgba(247,244,237,1)] border-solid border-2 max-md:max-w-full max-md:mt-10 max-md:pb-[30px] max-md:px-5 ${className}`}>
+      <nav className="mt-[20px] max-md:mt-5">
         {footerLinks.map((link, index) => (
           <a
             key={index}
