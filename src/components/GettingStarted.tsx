@@ -14,8 +14,9 @@ export const GettingStarted: React.FC<GettingStartedProps> = ({
       
       <ol className="text-[#1c1c1c] text-base sm:text-lg lg:text-xl font-normal leading-6 sm:leading-7 mt-8 sm:mt-10 lg:mt-[59px] max-md:max-w-full list-decimal list-inside space-y-3 sm:space-y-2">
         <li>Drop a single JS snippet or connect Segment</li>
+        <li>Not enough visits ? Get synthetic datas from AI</li>
         <li>GDPR-ready, EU hosting available</li>
-        <li>Works with your team — PMs, Growth, Designers</li>
+        <li>No coding skill required  — easy for everyone in your team</li>
       </ol>
     </section>;
 };
