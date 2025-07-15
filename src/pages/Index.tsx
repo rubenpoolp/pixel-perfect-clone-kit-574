@@ -1,12 +1,24 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from 'react';
+import { Header } from '@/components/Header';
+import { Hero } from '@/components/Hero';
+import { FeatureShowcase } from '@/components/FeatureShowcase';
+import { Benefits } from '@/components/Benefits';
+import { GettingStarted } from '@/components/GettingStarted';
+import { Footer } from '@/components/Footer';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="bg-white flex flex-col items-stretch py-[17px] min-h-screen">
+      <Header />
+      
+      <main className="self-center flex w-full max-w-[1504px] flex-col max-md:max-w-full">
+        <Hero />
+        <FeatureShowcase />
+        <Benefits />
+        <GettingStarted />
+      </main>
+      
+      <Footer />
     </div>
   );
 };
