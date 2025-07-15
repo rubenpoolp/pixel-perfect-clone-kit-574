@@ -27,31 +27,31 @@ export const Hero: React.FC<HeroProps> = ({
       window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank');
     }
   };
-  return <section className={`self-center flex w-full max-w-[1504px] flex-col mt-[260px] max-md:max-w-full max-md:mt-10 ${className}`}>
-      <h1 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] text-center self-center ml-2.5 max-md:max-w-full max-md:text-2xl">
+  return <section className={`self-center flex w-full max-w-[1504px] flex-col mt-32 sm:mt-40 lg:mt-[260px] px-4 sm:px-8 max-md:max-w-full ${className}`}>
+      <h1 className="text-[rgba(28,28,28,1)] text-xl sm:text-2xl lg:text-3xl font-medium leading-tight tracking-[-0.8px] sm:tracking-[-1.2px] text-center self-center ml-2.5 max-md:max-w-full">
         What do you want to improve today ?
       </h1>
-      <p className="text-[#1c1c1c] text-lg font-normal leading-none text-center self-center mt-[15px] max-md:max-w-full">
+      <p className="text-[#1c1c1c] text-base sm:text-lg font-normal leading-relaxed text-center self-center mt-3 sm:mt-[15px] max-md:max-w-full">
         Get insights & analytics - test & improve your product by chatting with AI
       </p>
       
-      <form onSubmit={handleSubmit} className="bg-[rgba(247,244,237,1)] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1)] border self-center flex w-[768px] max-w-full flex-col overflow-hidden items-stretch text-[rgba(95,95,93,1)] mt-[46px] pt-[22px] pb-[13px] px-[17px] rounded-[28px] border-[rgba(28,28,28,0.2)] border-solid max-md:mt-10 max-md:pl-5">
-        <div className="flex items-stretch gap-[3px] text-base font-normal leading-none flex-wrap">
-          <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleKeyDown} className="grow shrink basis-auto max-md:max-w-full bg-transparent border-none outline-none placeholder-[rgba(95,95,93,1)]" placeholder="Ask Clutch to optimize conversions by giving insights through heatmaps" />
+      <form onSubmit={handleSubmit} className="bg-[rgba(247,244,237,1)] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1)] border self-center flex w-full max-w-[768px] flex-col overflow-hidden items-stretch text-[rgba(95,95,93,1)] mt-6 sm:mt-8 lg:mt-[46px] pt-4 sm:pt-[22px] pb-3 sm:pb-[13px] px-4 sm:px-[17px] rounded-2xl sm:rounded-[28px] border-[rgba(28,28,28,0.2)] border-solid">
+        <div className="flex items-stretch gap-[3px] text-sm sm:text-base font-normal leading-relaxed flex-wrap">
+          <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleKeyDown} className="grow shrink basis-auto max-md:max-w-full bg-transparent border-none outline-none placeholder-[rgba(95,95,93,1)] text-sm sm:text-base py-2" placeholder="Ask Clutch to optimize conversions by giving insights through heatmaps" />
           
         </div>
         
-        <div className="flex items-stretch gap-10 text-sm font-medium text-center flex-wrap mt-[60px] max-md:mt-10">
+        <div className="flex items-stretch gap-4 sm:gap-10 text-xs sm:text-sm font-medium text-center flex-wrap mt-8 sm:mt-12 lg:mt-[60px]">
           <div className="flex items-stretch gap-5 flex-wrap grow shrink basis-auto">
-            {suggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => setSearchQuery(suggestion.text)} className="bg-[rgba(247,244,237,1)] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] border flex items-stretch gap-1 text-black leading-none px-[13px] py-2 rounded-full border-[rgba(236,234,228,1)] border-solid hover:bg-[rgba(236,234,228,1)] transition-colors">
-                <img src={suggestion.icon} className="aspect-[1] object-contain w-4 shrink-0" alt="" />
+            {suggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => setSearchQuery(suggestion.text)} className="bg-[rgba(247,244,237,1)] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] border flex items-stretch gap-1 text-black leading-relaxed px-2 sm:px-[13px] py-1.5 sm:py-2 rounded-full border-[rgba(236,234,228,1)] border-solid hover:bg-[rgba(236,234,228,1)] transition-colors text-xs sm:text-sm">
+                <img src={suggestion.icon} className="aspect-[1] object-contain w-3 sm:w-4 shrink-0" alt="" />
                 <span className="basis-auto grow shrink">
                   {suggestion.text}
                 </span>
               </button>)}
           </div>
-          <button type="submit" className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${searchQuery.trim() ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 hover:bg-gray-500'}`}>
-            <ArrowUp className="w-4 h-4 text-white" />
+          <button type="submit" className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 ${searchQuery.trim() ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 hover:bg-gray-500'}`}>
+            <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
           </button>
         </div>
       </form>

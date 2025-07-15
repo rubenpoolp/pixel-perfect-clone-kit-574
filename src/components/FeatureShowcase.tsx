@@ -6,17 +6,17 @@ interface FeatureShowcaseProps {
 
 export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ className = '' }) => {
   return (
-    <section className={`w-full max-w-[1504px] ${className}`}>
-      <h2 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] mt-[180px] max-md:max-w-full max-md:text-2xl max-md:mt-10">
+    <section className={`w-full max-w-[1504px] px-4 sm:px-8 ${className}`}>
+      <h2 className="text-[rgba(28,28,28,1)] text-xl sm:text-2xl lg:text-3xl font-medium leading-tight tracking-[-0.8px] sm:tracking-[-1.2px] mt-16 sm:mt-24 lg:mt-[180px] max-md:max-w-full">
         From questions to improvement — in seconds
       </h2>
-      <p className="text-[#1c1c1c] text-lg font-normal leading-none mt-[22px] max-md:max-w-full">
+      <p className="text-[#1c1c1c] text-base sm:text-lg font-normal leading-relaxed mt-4 sm:mt-6 lg:mt-[22px] max-md:max-w-full">
         No more guessing. Ask Jackie anything — get an insight, a visual, and an actionable next step.
       </p>
       
-      <div className="border w-[1473px] shrink-0 max-w-full h-[3px] mt-[33px] border-[rgba(206,206,206,1)] border-solid" />
+      <div className="border w-full max-w-[1473px] shrink-0 h-[2px] sm:h-[3px] mt-6 sm:mt-8 lg:mt-[33px] border-[rgba(206,206,206,1)] border-solid" />
       
-      <div className="w-full max-w-[1467px] mt-[38px] max-md:max-w-full">
+      <div className="w-full max-w-[1467px] mt-6 sm:mt-8 lg:mt-[38px] max-md:max-w-full">
         <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
           <div className="w-[42%] max-md:w-full max-md:ml-0">
             <img
