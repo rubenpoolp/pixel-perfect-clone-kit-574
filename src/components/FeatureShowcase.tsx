@@ -7,10 +7,10 @@ interface FeatureShowcaseProps {
 export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ className = '' }) => {
   return (
     <section className={`w-full max-w-[1504px] ${className}`}>
-      <h2 className="text-[rgba(28,28,28,1)] text-5xl font-medium leading-none tracking-[-1.2px] mt-[180px] max-md:max-w-full max-md:text-[40px] max-md:mt-10">
+      <h2 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] mt-[180px] max-md:max-w-full max-md:text-2xl max-md:mt-10">
         From questions to improvement — in seconds
       </h2>
-      <p className="text-[#1c1c1c] text-xl font-normal leading-none mt-[22px] max-md:max-w-full">
+      <p className="text-[#1c1c1c] text-lg font-normal leading-none mt-[22px] max-md:max-w-full">
         Ask Clutch anything — get an insight, a visual, and an actionable next step. No more guessing.
       </p>
       

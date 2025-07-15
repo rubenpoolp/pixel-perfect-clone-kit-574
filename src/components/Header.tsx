@@ -7,8 +7,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   return (
     <header className={`bg-[rgba(252,251,248,0.75)] flex w-full flex-col items-center pt-4 pb-[9px] px-[70px] max-md:max-w-full max-md:px-5 ${className}`}>
-      <div className="flex w-full max-w-[1425px] gap-5 flex-wrap justify-between max-md:max-w-full">
-        <div className="text-[40px] text-black font-extrabold leading-[0.6]">
+      <div className="flex w-full max-w-[1200px] gap-5 flex-wrap justify-between max-md:max-w-full">
+        <div className="text-2xl text-black font-extrabold leading-[0.6]">
           <div className="w-[134px] shrink-0 h-1.5 border-black border-solid border-[6px] max-md:mr-0.5" />
           <div className="mt-[7px]">
             CLU CH

@@ -11,7 +11,7 @@ const Index = () => {
     <div className="bg-white flex flex-col items-stretch py-[17px] min-h-screen">
       <Header />
       
-      <main className="self-center flex w-full max-w-[1504px] flex-col max-md:max-w-full">
+      <main className="self-center flex w-full max-w-[1200px] flex-col max-md:max-w-full px-8">
         <Hero />
         <FeatureShowcase />
         <Benefits />

@@ -9,10 +9,10 @@ const Benefit: React.FC<BenefitProps> = ({ emoji, title }) => {
   return (
     <div className="w-[33%] max-md:w-full max-md:ml-0">
       <div className="flex grow flex-col items-stretch font-normal text-center max-md:mt-10">
-        <div className="text-black text-[50px] leading-none self-center max-md:text-[40px]">
+        <div className="text-black text-3xl leading-none self-center max-md:text-2xl">
           {emoji}
         </div>
-        <div className="text-[#1c1c1c] text-[35px] leading-9 mt-14 max-md:mt-10">
+        <div className="text-[#1c1c1c] text-xl leading-7 mt-14 max-md:mt-10">
           {title}
         </div>
       </div>
@@ -42,7 +42,7 @@ export const Benefits: React.FC<BenefitsProps> = ({ className = '' }) => {
 
   return (
     <section className={`w-full max-w-[1504px] ${className}`}>
-      <h2 className="text-[rgba(28,28,28,1)] text-5xl font-medium leading-none tracking-[-1.2px] mt-[69px] max-md:text-[40px] max-md:mt-10">
+      <h2 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] mt-[69px] max-md:text-2xl max-md:mt-10">
         3 key benefits
       </h2>
       

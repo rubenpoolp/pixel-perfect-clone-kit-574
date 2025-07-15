@@ -29,10 +29,10 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
   return (
     <section className={`self-center flex w-full max-w-[1504px] flex-col mt-[260px] max-md:max-w-full max-md:mt-10 ${className}`}>
-      <h1 className="text-[rgba(28,28,28,1)] text-5xl font-medium leading-none tracking-[-1.2px] text-center self-center ml-2.5 max-md:max-w-full max-md:text-[40px]">
+      <h1 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] text-center self-center ml-2.5 max-md:max-w-full max-md:text-2xl">
         What do you want to improve today ?
       </h1>
-      <p className="text-[#1c1c1c] text-xl font-normal leading-none text-center self-center mt-[15px] max-md:max-w-full">
+      <p className="text-[#1c1c1c] text-lg font-normal leading-none text-center self-center mt-[15px] max-md:max-w-full">
         Get insights & analytics - test & improve your product by chatting with AI
       </p>
       
