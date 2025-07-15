@@ -32,7 +32,7 @@ export const Benefits: React.FC<BenefitsProps> = ({ className = '' }) => {
     },
     {
       emoji: '🧠',
-      title: 'Let AI surface problems — and propose smart experiments'
+      title: 'Let AI surface problems and propose smart experiments'
     },
     {
       emoji: '⚡️',
