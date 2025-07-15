@@ -28,7 +28,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ className = ''
           <div className="w-[17%] ml-5 max-md:w-full max-md:ml-0 flex items-center justify-center">
             <img
               src="https://cdn.builder.io/api/v1/image/assets/TEMP/a686228dfdb2d6a53522a2f780257fedba21e222?placeholderIfAbsent=true"
-              className="aspect-[3.76] object-contain w-full max-w-[218px] shrink-0 max-md:mt-10 max-md:rotate-90 max-md:w-12 max-md:aspect-[0.27] sm:w-32 md:w-36 lg:w-40"
+              className="aspect-[3.76] object-contain w-full max-w-[218px] shrink-0 max-md:mt-6 max-md:rotate-90 max-md:w-16 max-md:aspect-[0.27] sm:w-32 md:w-36 lg:w-40"
               alt="Feature showcase center"
             />
           </div>
