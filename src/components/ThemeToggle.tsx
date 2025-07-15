@@ -26,7 +26,11 @@ export const ThemeToggle: React.FC = () => {
   }
   
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
+    console.log('Current theme:', theme);
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    console.log('Setting theme to:', newTheme);
+    setTheme(newTheme);
+    console.log('Document classes:', document.documentElement.className);
   };
 
   return (
