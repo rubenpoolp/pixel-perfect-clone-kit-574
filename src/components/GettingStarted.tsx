@@ -1,12 +1,11 @@
 import React from 'react';
-
 interface GettingStartedProps {
   className?: string;
 }
-
-export const GettingStarted: React.FC<GettingStartedProps> = ({ className = '' }) => {
-  return (
-    <section className={`w-full max-w-[1504px] ${className}`}>
+export const GettingStarted: React.FC<GettingStartedProps> = ({
+  className = ''
+}) => {
+  return <section className={`w-full max-w-[1504px] ${className}`}>
       <h2 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] mt-[120px] max-md:max-w-full max-md:text-2xl max-md:mt-10">
         Get started in 2 minutes, not 2 weeks
       </h2>
@@ -18,6 +17,5 @@ export const GettingStarted: React.FC<GettingStartedProps> = ({ className = '' }
         <li>GDPR-ready, EU hosting available</li>
         <li>Works with your team — PMs, Growth, Designers</li>
       </ol>
-    </section>
-  );
+    </section>;
 };
