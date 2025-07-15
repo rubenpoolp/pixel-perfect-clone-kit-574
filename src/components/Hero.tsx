@@ -37,7 +37,7 @@ export const Hero: React.FC<HeroProps> = ({
       
       <form onSubmit={handleSubmit} className="bg-[rgba(247,244,237,1)] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1)] border self-center flex w-full max-w-[768px] flex-col overflow-hidden items-stretch text-[rgba(95,95,93,1)] mt-6 sm:mt-8 lg:mt-[46px] pt-4 sm:pt-[22px] pb-3 sm:pb-[13px] px-4 sm:px-[17px] rounded-2xl sm:rounded-[28px] border-[rgba(28,28,28,0.2)] border-solid">
         <div className="flex items-stretch gap-[3px] text-sm sm:text-base font-normal leading-relaxed flex-wrap">
-          <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleKeyDown} className="grow shrink basis-auto max-md:max-w-full bg-transparent border-none outline-none placeholder-[rgba(95,95,93,1)] text-sm sm:text-base py-2" placeholder="Ask Clutch to optimize conversions by giving insights through heatmaps" />
+          <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleKeyDown} className="grow shrink basis-auto max-md:max-w-full bg-transparent border-none outline-none placeholder-[rgba(95,95,93,1)] text-sm sm:text-base py-2" placeholder="Optimize conversions by giving insights through heatmaps" />
           
         </div>
         
