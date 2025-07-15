@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ArrowUp } from 'lucide-react';
 interface HeroProps {
   className?: string;
 }
@@ -50,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({
               </button>)}
           </div>
           <button type="submit" className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 bg-black hover:bg-gray-800">
-            <img src="https://cdn.builder.io/api/v1/image/assets/TEMP/2be089ad9905a0a554adf52ae105b290c1c24802?placeholderIfAbsent=true" className="aspect-[1] object-contain w-4 shrink-0 filter invert" alt="Submit" />
+            <ArrowUp className="w-4 h-4 text-white" />
           </button>
         </div>
       </form>
