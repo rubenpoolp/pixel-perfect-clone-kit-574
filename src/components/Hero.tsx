@@ -15,15 +15,15 @@ export const Hero: React.FC<HeroProps> = ({
   }];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to typeform
-    window.open('https://your-typeform-link-here.com', '_blank');
+    // Redirect to Calendly
+    window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Redirect to typeform
-      window.open('https://your-typeform-link-here.com', '_blank');
+      // Redirect to Calendly
+      window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank');
     }
   };
   return <section className={`self-center flex w-full max-w-[1504px] flex-col mt-[260px] max-md:max-w-full max-md:mt-10 ${className}`}>
