@@ -15,7 +15,16 @@ export const Hero: React.FC<HeroProps> = ({
   }];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Search query:', searchQuery);
+    // Redirect to typeform
+    window.open('https://your-typeform-link-here.com', '_blank');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Redirect to typeform
+      window.open('https://your-typeform-link-here.com', '_blank');
+    }
   };
   return <section className={`self-center flex w-full max-w-[1504px] flex-col mt-[260px] max-md:max-w-full max-md:mt-10 ${className}`}>
       <h1 className="text-[rgba(28,28,28,1)] text-3xl font-medium leading-none tracking-[-1.2px] text-center self-center ml-2.5 max-md:max-w-full max-md:text-2xl">
@@ -27,7 +36,7 @@ export const Hero: React.FC<HeroProps> = ({
       
       <form onSubmit={handleSubmit} className="bg-[rgba(247,244,237,1)] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1)] border self-center flex w-[768px] max-w-full flex-col overflow-hidden items-stretch text-[rgba(95,95,93,1)] mt-[46px] pt-[22px] pb-[13px] px-[17px] rounded-[28px] border-[rgba(28,28,28,0.2)] border-solid max-md:mt-10 max-md:pl-5">
         <div className="flex items-stretch gap-[3px] text-base font-normal leading-none flex-wrap">
-          <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="grow shrink basis-auto max-md:max-w-full bg-transparent border-none outline-none placeholder-[rgba(95,95,93,1)]" placeholder="Ask Clutch to optimize conversions by giving insights through heatmaps" />
+          <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleKeyDown} className="grow shrink basis-auto max-md:max-w-full bg-transparent border-none outline-none placeholder-[rgba(95,95,93,1)]" placeholder="Ask Clutch to optimize conversions by giving insights through heatmaps" />
           
         </div>
         

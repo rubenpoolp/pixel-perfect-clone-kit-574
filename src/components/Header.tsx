@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             CLU CH
           </div>
         </div>
-        <button className="bg-[rgba(28,28,28,1)] flex flex-col items-stretch text-lg text-[rgba(252,251,248,1)] font-medium text-center leading-none justify-center px-8 py-[11px] rounded-md max-md:px-5 hover:bg-[rgba(28,28,28,0.9)] transition-colors">
+        <button onClick={() => window.open('https://your-typeform-link-here.com', '_blank')} className="bg-[rgba(28,28,28,1)] flex flex-col items-stretch text-lg text-[rgba(252,251,248,1)] font-medium text-center leading-none justify-center px-8 py-[11px] rounded-md max-md:px-5 hover:bg-[rgba(28,28,28,0.9)] transition-colors">
           <div>Request a demo</div>
         </button>
       </div>
