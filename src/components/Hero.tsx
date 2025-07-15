@@ -50,7 +50,7 @@ export const Hero: React.FC<HeroProps> = ({
                 </span>
               </button>)}
           </div>
-          <button type="submit" className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 bg-black hover:bg-gray-800">
+          <button type="submit" className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${searchQuery.trim() ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 hover:bg-gray-500'}`}>
             <ArrowUp className="w-4 h-4 text-white" />
           </button>
         </div>
