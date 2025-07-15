@@ -13,13 +13,11 @@ export const GettingStarted: React.FC<GettingStartedProps> = ({ className = '' }
       
       <div className="border w-[1473px] shrink-0 max-w-full h-[3px] mt-[30px] border-[rgba(206,206,206,1)] border-solid" />
       
-      <div className="text-[#1c1c1c] text-2xl font-normal leading-[40px] mt-[59px] max-md:max-w-full max-md:mt-10">
-        Drop a single JS snippet or connect Segment
-        <br />
-        GDPR-ready, EU hosting available
-        <br />
-        Works with your team — PMs, Growth, Designers
-      </div>
+      <ol className="text-[#1c1c1c] text-2xl font-normal leading-[40px] mt-[59px] max-md:max-w-full max-md:mt-10 list-decimal list-inside space-y-2">
+        <li>Drop a single JS snippet or connect Segment</li>
+        <li>GDPR-ready, EU hosting available</li>
+        <li>Works with your team — PMs, Growth, Designers</li>
+      </ol>
     </section>
   );
 };
