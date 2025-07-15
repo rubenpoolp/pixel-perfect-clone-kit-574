@@ -12,7 +12,7 @@ export const GettingStarted: React.FC<GettingStartedProps> = ({
       
       <div className="border w-[1473px] shrink-0 max-w-full h-[3px] mt-[30px] border-[rgba(206,206,206,1)] border-solid" />
       
-      <ol className="text-[#1c1c1c] text-lg font-normal leading-[32px] mt-[59px] max-md:max-w-full max-md:mt-10 list-decimal list-inside space-y-2">
+      <ol className="text-[#1c1c1c] text-xl font-normal leading-7 mt-[59px] max-md:max-w-full max-md:mt-10 list-decimal list-inside space-y-2">
         <li>Drop a single JS snippet or connect Segment</li>
         <li>GDPR-ready, EU hosting available</li>
         <li>Works with your team — PMs, Growth, Designers</li>
