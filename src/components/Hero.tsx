@@ -15,10 +15,6 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
     {
       icon: 'https://cdn.builder.io/api/v1/image/assets/TEMP/91e4a8fdd5d2e5cd09929a96db2f7794848e1dcc?placeholderIfAbsent=true',
       text: 'A/B Test my onboarding'
-    },
-    {
-      icon: 'https://cdn.builder.io/api/v1/image/assets/TEMP/91e4a8fdd5d2e5cd09929a96db2f7794848e1dcc?placeholderIfAbsent=true',
-      text: 'More'
     }
   ];
 
@@ -62,7 +58,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
                   className="aspect-[1] object-contain w-4 shrink-0"
                   alt=""
                 />
-                <span className={index === 2 ? "my-auto" : "basis-auto grow shrink"}>
+                <span className="basis-auto grow shrink">
                   {suggestion.text}
                 </span>
               </button>
