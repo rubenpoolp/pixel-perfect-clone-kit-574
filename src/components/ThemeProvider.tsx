@@ -1,7 +1,29 @@
 import React from 'react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
-import { type ThemeProviderProps } from 'next-themes/dist/types';
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+interface ThemeProviderProps {
+  children: React.ReactNode;
+  attribute?: "class" | "data-theme";
+  defaultTheme?: string;
+  enableSystem?: boolean;
+  disableTransitionOnChange?: boolean;
+}
+
+export function ThemeProvider({ 
+  children, 
+  attribute = "class",
+  defaultTheme = "light",
+  enableSystem = false,
+  disableTransitionOnChange = false
+}: ThemeProviderProps) {
+  return (
+    <NextThemesProvider
+      attribute={attribute}
+      defaultTheme={defaultTheme}
+      enableSystem={enableSystem}
+      disableTransitionOnChange={disableTransitionOnChange}
+    >
+      {children}
+    </NextThemesProvider>
+  );
 }
