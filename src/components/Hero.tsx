@@ -67,7 +67,7 @@ export const Hero: React.FC<HeroProps> = ({
       {/* Mobile suggestions - shown only on mobile, outside the form */}
       <div className="flex sm:hidden items-stretch gap-4 text-xs font-medium text-center flex-wrap mt-6 self-center w-full max-w-[768px] px-4">
         <div className="flex items-stretch gap-3 flex-wrap grow shrink basis-auto">
-          {suggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => setSearchQuery(suggestion.text)} className="bg-[rgba(247,244,237,1)] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] border flex items-stretch gap-1 text-black leading-relaxed px-2 py-1.5 rounded-full border-[rgba(236,234,228,1)] border-solid hover:bg-[rgba(236,234,228,1)] transition-colors text-xs">
+          {suggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => setSearchQuery(suggestion.text)} className="bg-[rgba(247,244,237,1)] shadow-[0px_1px_2px_rgba(0,0,0,0.05)] border flex items-stretch gap-1 text-black leading-relaxed px-3 py-2 rounded-full border-[rgba(236,234,228,1)] border-solid hover:bg-[rgba(236,234,228,1)] transition-colors text-[10px] whitespace-nowrap">
               <img src={suggestion.icon} className="aspect-[1] object-contain w-3 shrink-0" alt="" />
               <span className="basis-auto grow shrink">
                 {suggestion.text}
