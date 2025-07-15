@@ -12,17 +12,6 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
 
   return (
     <footer className={`bg-[rgba(252,251,248,1)] self-stretch flex w-full flex-col mt-[189px] pl-8 pr-20 pt-[35px] pb-[139px] rounded-[20px] border-[rgba(247,244,237,1)] border-solid border-2 max-md:max-w-full max-md:mt-10 max-md:pb-[100px] max-md:px-5 ${className}`}>
-      <div className="self-stretch flex w-full max-w-[1200px] gap-5 flex-wrap justify-between max-md:max-w-full">
-        <img 
-          src="/lovable-uploads/dc904fb1-598d-43de-8bdd-4fcf664e5108.png" 
-          alt="Jackie Logo" 
-          className="h-12 w-auto object-contain"
-        />
-        <button onClick={() => window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank')} className="bg-[rgba(28,28,28,1)] flex flex-col items-stretch text-lg text-[rgba(252,251,248,1)] font-medium text-center leading-none justify-center mt-[5px] px-8 py-[11px] rounded-md max-md:px-5 hover:bg-[rgba(28,28,28,0.9)] transition-colors">
-          <div>Request a demo</div>
-        </button>
-      </div>
-      
       <nav className="mt-[68px] max-md:mt-10">
         {footerLinks.map((link, index) => (
           <a
