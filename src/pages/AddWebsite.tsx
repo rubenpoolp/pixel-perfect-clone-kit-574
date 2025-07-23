@@ -2,14 +2,19 @@ import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const AddWebsite = () => {
+  const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [productType, setProductType] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle website submission logic here
-    console.log('Website URL submitted:', websiteUrl);
+    // Store the data (you can use localStorage, context, or API call)
+    localStorage.setItem('websiteData', JSON.stringify({ websiteUrl, productType }));
+    // Redirect to chat interface
+    navigate('/chat');
   };
 
   return (
@@ -48,7 +53,10 @@ const AddWebsite = () => {
             </label>
             <select
               id="product-type"
+              value={productType}
+              onChange={(e) => setProductType(e.target.value)}
               className="w-full bg-white border border-[rgba(28,28,28,0.2)] rounded-lg px-4 py-3 text-[rgba(28,28,28,1)] focus:outline-none focus:ring-2 focus:ring-[rgba(28,28,28,0.3)] focus:border-transparent"
+              required
             >
               <option value="">Select your product type</option>
               <option value="ecommerce">E-commerce</option>
@@ -62,7 +70,7 @@ const AddWebsite = () => {
           <Button 
             type="submit" 
             className="bg-[rgba(28,28,28,1)] text-[rgba(252,251,248,1)] hover:bg-[rgba(28,28,28,0.9)] font-medium py-3 px-6 rounded-lg transition-colors"
-            disabled={!websiteUrl.trim()}
+            disabled={!websiteUrl.trim() || !productType.trim()}
           >
             Add Website
           </Button>
