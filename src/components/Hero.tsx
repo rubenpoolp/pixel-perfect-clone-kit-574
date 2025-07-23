@@ -16,15 +16,15 @@ export const Hero: React.FC<HeroProps> = ({
   }];
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to Calendly
-    window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank');
+    // Redirect to add website page
+    window.location.href = '/add-website';
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Redirect to Calendly
-      window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank');
+      // Redirect to add website page
+      window.location.href = '/add-website';
     }
   };
   return <section className={`self-center flex w-full max-w-[1504px] flex-col mt-32 sm:mt-40 lg:mt-[260px] px-4 sm:px-8 max-md:max-w-full ${className}`}>
