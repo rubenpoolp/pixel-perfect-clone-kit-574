@@ -11,7 +11,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({ className = ''
         From questions to improvement — in seconds
       </h2>
       <p className="text-[#1c1c1c] text-base sm:text-lg font-normal leading-relaxed mt-4 sm:mt-6 lg:mt-[22px] max-md:max-w-full">
-        No more guessing. Ask Jackie anything — get an insight, a visual, and an actionable next step.
+        No more guessing. Ask Clutch anything — get an insight, a visual, and an actionable next step.
       </p>
       
       <div className="border w-full max-w-[1473px] shrink-0 h-[2px] sm:h-[3px] mt-6 sm:mt-8 lg:mt-[33px] border-[rgba(206,206,206,1)] border-solid" />

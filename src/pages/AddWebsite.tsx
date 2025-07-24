@@ -100,7 +100,7 @@ const AddWebsite = () => {
           <p className="text-[rgba(95,95,93,1)] text-sm">
             Need help getting started? 
             <button 
-              onClick={() => window.open('https://calendly.com/ruben-friendsofjackie/30min', '_blank')}
+              onClick={() => window.open('https://calendly.com/ruben-clutch/30min', '_blank')}
               className="text-[rgba(28,28,28,1)] font-medium ml-1 hover:underline"
             >
               Request a demo

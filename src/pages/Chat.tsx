@@ -146,7 +146,7 @@ const Chat: React.FC<ChatProps> = () => {
       
       // Create personalized first message
       addMessage({
-        content: `👋 Hey there! I'm Jackie — your AI co-pilot for website optimization.
+        content: `👋 Hey there! I'm Clutch — your AI co-pilot for website optimization.
 
 I just took a look at your site and I'm ready to share quick, actionable ideas to boost conversions and improve the user experience.
 
@@ -368,7 +368,7 @@ Let's start!`,
                 <div className="bg-neutral-800 border border-neutral-600 rounded-lg p-4 text-center">
                   <p className="text-gray-200 mb-3">For more detailed insights and personalized recommendations</p>
                   <Button 
-                    onClick={() => window.open('https://calendly.com/jackie-ai', '_blank')}
+                    onClick={() => window.open('https://calendly.com/ruben-clutch/30min', '_blank')}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
                   >
                     Request a Demo
@@ -381,7 +381,7 @@ Let's start!`,
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask Jackie..."
+                  placeholder="Ask Clutch..."
                   className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={isLoading}
                 />
