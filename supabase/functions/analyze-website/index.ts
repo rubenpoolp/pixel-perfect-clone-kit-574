@@ -51,9 +51,16 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-    // Scrape the actual page content using Firecrawl
-    console.log(`Scraping page content for: ${currentPage}`)
-    const pageContent = await scrapePageContent(currentPage, firecrawlApiKey)
+    // Log request details for debugging
+    console.log('Analysis request received:')
+    console.log('- Website URL:', websiteUrl)
+    console.log('- Current Page:', currentPage)
+    console.log('- Product Type:', productType)
+    console.log('- User Question:', userQuestion)
+    
+    // Scrape the actual page content using Firecrawl (use websiteUrl, not currentPage)
+    console.log(`Scraping page content for: ${websiteUrl}`)
+    const pageContent = await scrapePageContent(websiteUrl, firecrawlApiKey)
     
     // Create enhanced system prompt with real page content
     const systemPrompt = createSystemPrompt(websiteUrl, currentPage, productType, pageContent, industry, analysisType)
@@ -147,6 +154,12 @@ async function scrapePageContent(url: string, apiKey: string): Promise<string> {
   try {
     console.log(`Attempting to scrape: ${url}`)
     console.log(`Using Firecrawl API key: ${apiKey ? 'Present' : 'Missing'}`)
+    
+    // Validate URL before attempting to scrape
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      console.error(`Invalid URL format: ${url}. URL must start with http:// or https://`)
+      return `SCRAPING_FAILED: Invalid URL format - ${url}. Please ensure the URL includes the protocol (http:// or https://).`
+    }
     
     const requestBody = {
       url,
