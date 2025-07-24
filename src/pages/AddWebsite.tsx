@@ -27,7 +27,7 @@ const AddWebsite = () => {
             Start analyzing your Website
           </h1>
           <p className="text-[#1c1c1c] text-base sm:text-lg font-normal leading-relaxed">
-            Enter the URL of your website or SaaS product to get started with analytics and insights
+            Enter the URL of your website to get started with analytics and insights
           </p>
         </div>
 
