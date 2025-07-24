@@ -201,7 +201,7 @@ const Chat: React.FC<ChatProps> = () => {
           setSearchParams({ page: iframeUrl });
           
           const navMessage: Message = {
-            id: Date.now().toString(),
+            id: `nav-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             content: `🎯 **Auto-detected navigation to: ${newPageName}**\n\nURL: ${iframeUrl}\n\nReady for page-specific insights!`,
             sender: 'ai',
             timestamp: new Date(),
@@ -214,7 +214,7 @@ const Chat: React.FC<ChatProps> = () => {
         // Show helpful message about manual URL updating
         if (lastUrl === currentPageUrl) {
           const helpMessage: Message = {
-            id: Date.now().toString(),
+            id: `help-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             content: `⚠️ **Auto-navigation blocked by website security**\n\n📝 **Please manually update the URL above when you navigate to get page-specific insights!**\n\n💡 **Tip**: Copy the current page URL from your browser and paste it in the URL bar above.`,
             sender: 'ai',
             timestamp: new Date(),
@@ -242,7 +242,7 @@ const Chat: React.FC<ChatProps> = () => {
     if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       content: inputMessage,
       sender: 'user',
       timestamp: new Date(),
@@ -271,7 +271,7 @@ const Chat: React.FC<ChatProps> = () => {
       }
       
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         content: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
@@ -292,7 +292,7 @@ const Chat: React.FC<ChatProps> = () => {
     
     // Add context message
     const contextMessage: Message = {
-      id: Date.now().toString(),
+      id: `context-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       content: `📍 Navigated to **${pageName}** page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
       sender: 'ai',
       timestamp: new Date(),
