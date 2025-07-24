@@ -36,18 +36,27 @@ serve(async (req) => {
 
     // Get API keys and initialize Supabase client
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
+    const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not configured')
     }
+    
+    if (!firecrawlApiKey) {
+      throw new Error('Firecrawl API key not configured')
+    }
 
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-    // Create enhanced system prompt based on analysis type and context
-    const systemPrompt = createSystemPrompt(websiteUrl, currentPage, productType, industry, analysisType)
+    // Scrape the actual page content using Firecrawl
+    console.log(`Scraping page content for: ${currentPage}`)
+    const pageContent = await scrapePageContent(currentPage, firecrawlApiKey)
+    
+    // Create enhanced system prompt with real page content
+    const systemPrompt = createSystemPrompt(websiteUrl, currentPage, productType, pageContent, industry, analysisType)
 
     // Get conversation history if sessionId is provided
     let conversationContext = ''
@@ -134,7 +143,40 @@ serve(async (req) => {
   }
 })
 
-function createSystemPrompt(websiteUrl: string, currentPage: string, productType: string, industry?: string, analysisType?: string): string {
+async function scrapePageContent(url: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'html'],
+        includeTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'button', 'span', 'div'],
+        excludeTags: ['script', 'style', 'noscript'],
+        onlyMainContent: true
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('Firecrawl API error:', response.status, await response.text())
+      return 'Unable to scrape page content - will analyze based on URL structure'
+    }
+
+    const data = await response.json()
+    const content = data.data?.markdown || data.data?.html || ''
+    
+    // Limit content length to prevent OpenAI token limits
+    return content.substring(0, 4000)
+  } catch (error) {
+    console.error('Error scraping page:', error)
+    return 'Unable to scrape page content - will analyze based on URL structure'
+  }
+}
+
+function createSystemPrompt(websiteUrl: string, currentPage: string, productType: string, pageContent: string, industry?: string, analysisType?: string): string {
   const basePrompt = `You are Jackie, an expert website optimization consultant. Analyze SPECIFICALLY what you see on this exact page and compare it to industry leaders.
 
 Current Page Being Analyzed: ${currentPage}
@@ -142,13 +184,18 @@ Website: ${websiteUrl}
 Product/Service Type: ${productType}
 ${industry ? `Industry: ${industry}` : ''}
 
+ACTUAL PAGE CONTENT:
+${pageContent}
+
 CRITICAL ANALYSIS REQUIREMENTS:
-- Base your analysis ONLY on this specific page content
+- Base your analysis ONLY on the specific page content provided above
+- Reference ACTUAL elements, text, headlines, buttons, and layout from the scraped content
 - Compare this page to best practices from industry leaders and competitors
-- Reference specific elements you can see on THIS page
 - Provide benchmarks against similar companies/pages
-- NO generic advice - everything must be page-specific and actionable
-- Users should see immediate value by understanding exactly what's wrong with THIS page
+- NO generic advice - everything must be page-specific and actionable based on what's actually on the page
+- Quote actual text from the page when making suggestions (e.g., "Your headline 'Simple Pricing' should be...")
+- Reference actual button text, CTAs, pricing details, or missing elements you can see
+- Users should see immediate value by understanding exactly what's wrong with THIS specific page content
 
 RESPONSE FORMAT:
 - Use UPPERCASE for section titles 
