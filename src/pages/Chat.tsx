@@ -161,7 +161,7 @@ Let's start!`,
     } else {
       // No website data found, redirect to add website page
       addMessage({
-        content: `⚠️ **No website data found!** Please add your website first to start getting insights.`,
+        content: `⚠️ No website data found! Please add your website first to start getting insights.`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: ['Add my website', 'Go back to setup']
@@ -253,7 +253,7 @@ Let's start!`,
     
     // Add context message
     addMessage({
-      content: `📍 Navigated to **${pageName}** page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
+      content: `📍 Navigated to ${pageName} page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
       sender: 'ai',
       timestamp: new Date(),
       pageContext: pageName
