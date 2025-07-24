@@ -40,6 +40,7 @@ const Chat: React.FC<ChatProps> = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasAskedQuestion, setHasAskedQuestion] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -145,7 +146,7 @@ const Chat: React.FC<ChatProps> = () => {
       
       // Create personalized first message
       addMessage({
-        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n✅ **Jackie is ready** - Ask me anything about optimizing your website!\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`,
+        content: `👋 **Welcome! I'm Jackie, your AI website optimization expert.**\n\nI've analyzed your website and I'm ready to give you personalized, actionable insights that can immediately improve your conversions and user experience.\n\n**Currently analyzing:** ${initialPageName} on ${new URL(data.websiteUrl).hostname}\n\nI can help you identify conversion barriers, UX improvements, and growth opportunities that your competitors might be missing.\n\n**What would you like to optimize first?**`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
@@ -202,6 +203,9 @@ const Chat: React.FC<ChatProps> = () => {
         suggestions: analysis.suggestions,
         pageContext: currentPageName
       });
+
+      // Mark that the user has asked their first question
+      setHasAskedQuestion(true);
     } catch (error) {
       console.error('Error getting AI response:', error);
       addMessage({
@@ -352,23 +356,37 @@ const Chat: React.FC<ChatProps> = () => {
 
           {/* Input Area - Lovable Style */}
           <div className="p-4 border-t border-neutral-700">
-            <form onSubmit={handleSendMessage} className="relative">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask Jackie..."
-                className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={!inputMessage.trim() || isLoading}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+            {hasAskedQuestion ? (
+              <div className="space-y-4">
+                <div className="bg-neutral-800 border border-neutral-600 rounded-lg p-4 text-center">
+                  <p className="text-gray-200 mb-3">For more detailed insights and personalized recommendations</p>
+                  <Button 
+                    onClick={() => window.open('https://calendly.com/jackie-ai', '_blank')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  >
+                    Request a Demo
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSendMessage} className="relative">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="Ask Jackie..."
+                  className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={!inputMessage.trim() || isLoading}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
