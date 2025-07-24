@@ -150,8 +150,6 @@ const Chat: React.FC<ChatProps> = () => {
 
 I just took a look at your site and I'm ready to share quick, actionable ideas to boost conversions and improve the user experience.
 
-Right now, I'm digging into: the ${initialPageName} page on ${new URL(data.websiteUrl).hostname}
-
 Think of me as your growth sidekick — here to help you spot UX issues, remove friction, and find smart ways to outperform your competitors.
 
 Let's start!`,
