@@ -62,7 +62,7 @@ const Chat: React.FC<ChatProps> = () => {
       // Create personalized first message
       const welcomeMessage: Message = {
         id: '1',
-        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\nI'll automatically track your navigation as you browse through your website. Simply click on links within the site and I'll update the context to provide page-specific insights!\n\n💡 **Tip**: Navigate naturally through your website - I'll detect page changes and provide relevant analysis for each page you visit.`,
+        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n⚠️ **IMPORTANT**: Most websites block automatic URL tracking for security. **When you navigate to different pages, please copy the new URL and paste it in the yellow URL bar above to get page-specific insights!**\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
@@ -181,24 +181,18 @@ const Chat: React.FC<ChatProps> = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Enhanced iframe navigation detection with multiple strategies
+  // Enhanced navigation tracking with better UX
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe || !websiteData) return;
 
     let lastUrl = currentPageUrl;
-    let attempts = 0;
-    const maxAttempts = 3;
     
     const checkNavigation = () => {
-      attempts++;
       try {
-        // Try to access iframe location
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
         const iframeUrl = iframe.contentWindow?.location.href;
-        
         if (iframeUrl && iframeUrl !== lastUrl && iframeUrl !== 'about:blank') {
-          console.log('Navigation detected:', iframeUrl);
+          console.log('🚀 Navigation detected:', iframeUrl);
           lastUrl = iframeUrl;
           const newPageName = extractPageName(iframeUrl);
           
@@ -206,54 +200,38 @@ const Chat: React.FC<ChatProps> = () => {
           setCurrentPageName(newPageName);
           setSearchParams({ page: iframeUrl });
           
-          // Add navigation message
           const navMessage: Message = {
             id: Date.now().toString(),
-            content: `🔄 **Navigation Detected!**\n\n**Page**: ${newPageName}\n**URL**: ${iframeUrl}\n\nI'm now analyzing this specific page. What would you like to know about it?`,
+            content: `🎯 **Auto-detected navigation to: ${newPageName}**\n\nURL: ${iframeUrl}\n\nReady for page-specific insights!`,
             sender: 'ai',
             timestamp: new Date(),
             pageContext: newPageName,
             suggestions: getInitialSuggestions(websiteData.productType)
           };
           setMessages(prev => [...prev, navMessage]);
-          attempts = 0; // Reset attempts on successful detection
         }
       } catch (error) {
-        if (attempts >= maxAttempts) {
-          console.log('CORS restrictions detected - iframe navigation tracking limited');
-          attempts = 0;
+        // Show helpful message about manual URL updating
+        if (lastUrl === currentPageUrl) {
+          const helpMessage: Message = {
+            id: Date.now().toString(),
+            content: `⚠️ **Auto-navigation blocked by website security**\n\n📝 **Please manually update the URL above when you navigate to get page-specific insights!**\n\n💡 **Tip**: Copy the current page URL from your browser and paste it in the URL bar above.`,
+            sender: 'ai',
+            timestamp: new Date(),
+            pageContext: currentPageName
+          };
+          setMessages(prev => [...prev, helpMessage]);
         }
       }
     };
 
-    // Multiple detection strategies
-    const interval = setInterval(checkNavigation, 1000); // Check every second
-    
-    // Enhanced load detection
-    const handleIframeLoad = () => {
-      console.log('Iframe load event triggered');
-      setTimeout(() => checkNavigation(), 100);
-      setTimeout(() => checkNavigation(), 500);
-      setTimeout(() => checkNavigation(), 1000);
-    };
-
-    // Focus detection (when user interacts with iframe)
-    const handleIframeFocus = () => {
-      setTimeout(() => checkNavigation(), 100);
-    };
-
-    iframe.addEventListener('load', handleIframeLoad);
-    iframe.addEventListener('focus', handleIframeFocus);
-
-    // Initial check
-    setTimeout(() => checkNavigation(), 1000);
+    const interval = setInterval(checkNavigation, 2000);
+    iframe.addEventListener('load', () => setTimeout(checkNavigation, 500));
 
     return () => {
       clearInterval(interval);
-      iframe.removeEventListener('load', handleIframeLoad);
-      iframe.removeEventListener('focus', handleIframeFocus);
     };
-  }, [websiteData, setSearchParams, getInitialSuggestions]);
+  }, [websiteData, currentPageUrl, setSearchParams, getInitialSuggestions]);
 
   useEffect(() => {
     scrollToBottom();
@@ -486,26 +464,60 @@ const Chat: React.FC<ChatProps> = () => {
                   </div>
                 </div>
                 
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={currentPageUrl}
-                    onChange={(e) => setCurrentPageUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        navigateToPage(currentPageUrl);
-                      }
-                    }}
-                    className="flex-1 text-xs bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Enter page URL..."
-                  />
-                  <button
-                    onClick={() => navigateToPage(currentPageUrl)}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Go
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-yellow-400 text-xs">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span>UPDATE URL WHEN YOU NAVIGATE!</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={currentPageUrl}
+                      onChange={(e) => setCurrentPageUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          navigateToPage(currentPageUrl);
+                        }
+                      }}
+                      className="flex-1 text-sm bg-neutral-700 border-2 border-yellow-500 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-400"
+                      placeholder="👆 Copy & paste current page URL here when you navigate!"
+                    />
+                    <button
+                      onClick={() => navigateToPage(currentPageUrl)}
+                      className="px-4 py-2 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors font-medium"
+                    >
+                      UPDATE
+                    </button>
+                  </div>
+                  <div className="flex gap-1 flex-wrap">
+                    <button
+                      onClick={() => navigateToPage(websiteData.websiteUrl)}
+                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
+                    >
+                      🏠 Home
+                    </button>
+                    <button
+                      onClick={() => navigateToPage(websiteData.websiteUrl + '/about')}
+                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
+                    >
+                      About
+                    </button>
+                    <button
+                      onClick={() => navigateToPage(websiteData.websiteUrl + '/pricing')}
+                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
+                    >
+                      Pricing
+                    </button>
+                    <button
+                      onClick={() => navigateToPage(websiteData.websiteUrl + '/contact')}
+                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
+                    >
+                      Contact
+                    </button>
+                  </div>
                 </div>
               </div>
               
