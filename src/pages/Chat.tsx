@@ -273,7 +273,7 @@ const Chat: React.FC<ChatProps> = () => {
             <img 
               src="/lovable-uploads/c22e00c0-8844-4c75-9061-80d10b4cb779.png" 
               alt="Jackie Logo" 
-              className="h-8 w-auto object-contain"
+              className="h-8 w-auto object-contain filter brightness-0 invert"
             />
           </div>
 
