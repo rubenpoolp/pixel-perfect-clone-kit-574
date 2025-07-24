@@ -3,16 +3,36 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { validateAndSanitizeUrl } from '@/utils/validation';
+import { useToast } from '@/hooks/use-toast';
 
 const AddWebsite = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [productType, setProductType] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Store the data (you can use localStorage, context, or API call)
-    localStorage.setItem('websiteData', JSON.stringify({ websiteUrl, productType }));
+    
+    // Validate and sanitize URL
+    const { isValid, sanitizedUrl, error } = validateAndSanitizeUrl(websiteUrl);
+    
+    if (!isValid) {
+      toast({
+        title: "Invalid URL",
+        description: error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Store the sanitized data
+    localStorage.setItem('websiteData', JSON.stringify({ 
+      websiteUrl: sanitizedUrl, 
+      productType 
+    }));
+    
     // Redirect to chat interface
     navigate('/chat');
   };
