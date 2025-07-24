@@ -17,6 +17,7 @@ export type Database = {
       analysis_reports: {
         Row: {
           created_at: string
+          demo_session_id: string | null
           export_data: Json | null
           id: string
           metrics: Json | null
@@ -29,6 +30,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          demo_session_id?: string | null
           export_data?: Json | null
           id?: string
           metrics?: Json | null
@@ -41,6 +43,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          demo_session_id?: string | null
           export_data?: Json | null
           id?: string
           metrics?: Json | null
@@ -65,6 +68,7 @@ export type Database = {
         Row: {
           created_at: string
           current_page: string | null
+          demo_session_id: string | null
           id: string
           session_data: Json | null
           updated_at: string
@@ -74,6 +78,7 @@ export type Database = {
         Insert: {
           created_at?: string
           current_page?: string | null
+          demo_session_id?: string | null
           id?: string
           session_data?: Json | null
           updated_at?: string
@@ -83,6 +88,7 @@ export type Database = {
         Update: {
           created_at?: string
           current_page?: string | null
+          demo_session_id?: string | null
           id?: string
           session_data?: Json | null
           updated_at?: string
@@ -103,6 +109,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          demo_session_id: string | null
           id: string
           metadata: Json | null
           role: string
@@ -113,6 +120,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          demo_session_id?: string | null
           id?: string
           metadata?: Json | null
           role: string
@@ -123,6 +131,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          demo_session_id?: string | null
           id?: string
           metadata?: Json | null
           role?: string
@@ -143,6 +152,7 @@ export type Database = {
       websites: {
         Row: {
           created_at: string
+          demo_session_id: string | null
           description: string | null
           id: string
           industry: string | null
@@ -154,6 +164,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          demo_session_id?: string | null
           description?: string | null
           id?: string
           industry?: string | null
@@ -165,6 +176,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          demo_session_id?: string | null
           description?: string | null
           id?: string
           industry?: string | null
@@ -181,7 +193,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_demo_session_limits: {
+        Args: { session_id: string }
+        Returns: boolean
+      }
+      cleanup_demo_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
