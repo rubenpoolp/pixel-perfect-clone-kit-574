@@ -14,7 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_reports: {
+        Row: {
+          created_at: string
+          export_data: Json | null
+          id: string
+          metrics: Json | null
+          recommendations: Json | null
+          session_id: string | null
+          summary: string | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          export_data?: Json | null
+          id?: string
+          metrics?: Json | null
+          recommendations?: Json | null
+          session_id?: string | null
+          summary?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          export_data?: Json | null
+          id?: string
+          metrics?: Json | null
+          recommendations?: Json | null
+          session_id?: string | null
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analysis_sessions: {
+        Row: {
+          created_at: string
+          current_page: string | null
+          id: string
+          session_data: Json | null
+          updated_at: string
+          user_id: string | null
+          website_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_page?: string | null
+          id?: string
+          session_data?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_page?: string | null
+          id?: string
+          session_data?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_sessions_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+          session_id: string | null
+          suggestions: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+          session_id?: string | null
+          suggestions?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+          session_id?: string | null
+          suggestions?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      websites: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          product_type: string | null
+          title: string | null
+          updated_at: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          product_type?: string | null
+          title?: string | null
+          updated_at?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          product_type?: string | null
+          title?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
