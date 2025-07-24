@@ -332,7 +332,7 @@ const Chat: React.FC<ChatProps> = () => {
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
             <div className="flex items-center gap-2">
               <Link className="w-5 h-5 text-gray-400" />
-              <h1 className="text-white text-lg font-medium">{websiteData ? new URL(websiteData.websiteUrl).hostname : 'No website'}</h1>
+              <h1 className="text-gray-200 text-lg font-medium">{websiteData ? new URL(websiteData.websiteUrl).hostname : 'No website'}</h1>
             </div>
             <div className="flex items-center gap-2 relative">
               <button 
