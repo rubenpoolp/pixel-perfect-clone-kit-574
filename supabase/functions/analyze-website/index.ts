@@ -145,6 +145,8 @@ serve(async (req) => {
 
 async function scrapePageContent(url: string, apiKey: string): Promise<string> {
   try {
+    console.log(`Attempting to scrape: ${url}`)
+    
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -153,26 +155,38 @@ async function scrapePageContent(url: string, apiKey: string): Promise<string> {
       },
       body: JSON.stringify({
         url,
-        formats: ['markdown', 'html'],
-        includeTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'button', 'span', 'div'],
-        excludeTags: ['script', 'style', 'noscript'],
-        onlyMainContent: true
+        formats: ['markdown'],
+        includeTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'button', 'span', 'div', 'li', 'ul', 'ol'],
+        excludeTags: ['script', 'style', 'noscript', 'nav', 'footer', 'header'],
+        onlyMainContent: true,
+        waitFor: 3000, // Wait for JavaScript to load
+        screenshot: false,
+        fullPageScreenshot: false
       }),
     })
 
     if (!response.ok) {
-      console.error('Firecrawl API error:', response.status, await response.text())
-      return 'Unable to scrape page content - will analyze based on URL structure'
+      const errorText = await response.text()
+      console.error('Firecrawl API error:', response.status, errorText)
+      return `Unable to scrape page content (HTTP ${response.status}) - will analyze based on URL structure`
     }
 
     const data = await response.json()
-    const content = data.data?.markdown || data.data?.html || ''
+    console.log('Firecrawl response:', JSON.stringify(data, null, 2))
     
+    const content = data.data?.markdown || data.data?.html || data.markdown || ''
+    
+    if (!content || content.trim().length < 50) {
+      console.log('No meaningful content found, trying alternative approach')
+      return `Page appears to be JavaScript-heavy or protected. URL: ${url} - will provide general optimization advice for this page type.`
+    }
+    
+    console.log(`Successfully scraped ${content.length} characters`)
     // Limit content length to prevent OpenAI token limits
-    return content.substring(0, 4000)
+    return content.substring(0, 6000)
   } catch (error) {
     console.error('Error scraping page:', error)
-    return 'Unable to scrape page content - will analyze based on URL structure'
+    return `Unable to scrape page content due to error: ${error.message} - will analyze based on URL structure and best practices`
   }
 }
 
