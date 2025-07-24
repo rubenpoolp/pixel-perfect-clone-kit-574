@@ -43,24 +43,43 @@ const Chat: React.FC<ChatProps> = () => {
       
       // Check if there's a page parameter in URL
       const pageParam = searchParams.get('page');
-      const initialUrl = pageParam || data.websiteUrl;
-      const initialPageName = pageParam ? extractPageName(pageParam) : 'Homepage';
+      let initialUrl = data.websiteUrl;
+      let initialPageName = 'Homepage';
+      
+      // If page param exists and is not about:blank, use it
+      if (pageParam && pageParam !== 'about:blank' && pageParam.startsWith('http')) {
+        initialUrl = decodeURIComponent(pageParam);
+        initialPageName = extractPageName(initialUrl);
+      }
       
       setCurrentPageUrl(initialUrl);
       setCurrentPageName(initialPageName);
       
+      // Update URL to match the current page
+      setSearchParams({ page: initialUrl });
+      
       // Create personalized first message
       const welcomeMessage: Message = {
         id: '1',
-        content: `Great! I've analyzed your ${data.productType} website. I'm currently viewing your **${initialPageName}** page.\n\nI can provide page-specific insights and recommendations. Navigate through your website using the preview, and I'll automatically update to give you targeted advice for each page.\n\nWhat would you like to improve on this page?`,
+        content: `Great! I've loaded your ${data.productType} website: **${data.websiteUrl}**. Currently viewing: **${initialPageName}**\n\nNavigate through your website and I'll provide page-specific insights. The navigation tracking is now active!\n\nWhat would you like to improve on this page?`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
         pageContext: initialPageName
       };
       setMessages([welcomeMessage]);
+    } else {
+      // No website data found, redirect to add website page
+      const errorMessage: Message = {
+        id: '1',
+        content: `⚠️ **No website data found!** Please add your website first to start getting insights.`,
+        sender: 'ai',
+        timestamp: new Date(),
+        suggestions: ['Add my website', 'Go back to setup']
+      };
+      setMessages([errorMessage]);
     }
-  }, [searchParams]);
+  }, [searchParams, setSearchParams]);
 
   const extractPageName = (url: string): string => {
     try {
@@ -370,34 +389,39 @@ const Chat: React.FC<ChatProps> = () => {
     }, 200);
   };
 
-  // Add a manual detection button for emergencies
-  const forceNavigationCheck = () => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-
-    console.log('🚨 Force checking navigation...');
-    
-    // Try every possible method
-    try {
-      const url = iframe.contentWindow?.location.href;
-      if (url) {
-        console.log('🎯 Force check found URL:', url);
-        navigateToPage(url);
-        return;
-      }
-    } catch (e) {
-      console.log('Force check failed, showing prompt');
+  // Website URL management
+  const changeWebsiteUrl = () => {
+    const newUrl = prompt('Enter your website URL:', currentPageUrl);
+    if (newUrl && newUrl.startsWith('http')) {
+      const newWebsiteData = { ...websiteData, websiteUrl: newUrl } as WebsiteData;
+      localStorage.setItem('websiteData', JSON.stringify(newWebsiteData));
+      setWebsiteData(newWebsiteData);
+      navigateToPage(newUrl);
+      
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        content: `✅ **Website updated!** Now analyzing: ${extractPageName(newUrl)}. Navigation tracking is active.`,
+        sender: 'ai',
+        timestamp: new Date(),
+        pageContext: extractPageName(newUrl)
+      };
+      setMessages(prev => [...prev, successMessage]);
     }
+  };
 
-    // If all else fails, ask user
-    const promptMessage: Message = {
-      id: Date.now().toString(),
-      content: `🔍 **Manual detection needed** - What page are you currently viewing? (e.g., "pricing", "about", "contact", etc.) I'll track it for you.`,
-      sender: 'ai',
-      timestamp: new Date(),
-      suggestions: ['Pricing page', 'About page', 'Contact page', 'Features page', 'Blog page']
-    };
-    setMessages(prev => [...prev, promptMessage]);
+  const resetToHomepage = () => {
+    if (websiteData?.websiteUrl) {
+      navigateToPage(websiteData.websiteUrl);
+    }
+  };
+
+  // Quick navigation to common pages
+  const quickNavigate = (pagePath: string) => {
+    if (!websiteData?.websiteUrl) return;
+    
+    const baseUrl = websiteData.websiteUrl.replace(/\/$/, ''); // Remove trailing slash
+    const fullUrl = `${baseUrl}/${pagePath}`;
+    navigateToPage(fullUrl);
   };
 
   const scrollToBottom = () => {
@@ -654,6 +678,76 @@ const Chat: React.FC<ChatProps> = () => {
               
               {/* Website Preview */}
               <div className="flex-1 p-4">
+                {/* Website Controls */}
+                <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">Current Website:</span>
+                      <span className="text-sm text-blue-600">{currentPageName}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={changeWebsiteUrl}
+                        className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                      >
+                        Change URL
+                      </button>
+                      <button
+                        onClick={resetToHomepage}
+                        className="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
+                      >
+                        Home
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Navigation */}
+                  <div className="flex flex-wrap gap-1">
+                    <span className="text-xs text-gray-500 mr-2">Quick nav:</span>
+                    {['pricing', 'about', 'contact', 'features', 'blog'].map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => quickNavigate(page)}
+                        className="px-2 py-1 bg-white border border-gray-300 rounded text-xs hover:bg-gray-100 capitalize"
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Manual URL Input */}
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="Or enter full URL here..."
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const url = (e.target as HTMLInputElement).value;
+                          if (url.startsWith('http')) {
+                            navigateToPage(url);
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={(e) => {
+                        const input = (e.target as HTMLButtonElement).parentElement?.querySelector('input') as HTMLInputElement;
+                        const url = input?.value;
+                        if (url?.startsWith('http')) {
+                          navigateToPage(url);
+                          input.value = '';
+                        }
+                      }}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                    >
+                      Go
+                    </button>
+                  </div>
+                </div>
+
+                {/* Iframe Container */}
                 <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden">
                   <iframe
                     ref={iframeRef}
@@ -666,37 +760,11 @@ const Chat: React.FC<ChatProps> = () => {
                   />
                 </div>
                 
-                {/* Debug and Status Section */}
-                <div className="mt-2 space-y-2">
-                  <div className="text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      Ultra-aggressive navigation tracking active (50ms polling)
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={forceNavigationCheck}
-                      className="px-3 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 transition-colors"
-                    >
-                      🚨 Force Check Navigation
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('Current state:', { currentPageUrl, currentPageName });
-                        const iframe = iframeRef.current;
-                        try {
-                          console.log('Iframe src:', iframe?.src);
-                          console.log('Iframe contentWindow:', iframe?.contentWindow?.location.href);
-                        } catch (e) {
-                          console.log('Cross-origin restriction confirmed');
-                        }
-                      }}
-                      className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
-                    >
-                      🔍 Debug Info
-                    </button>
+                {/* Status */}
+                <div className="mt-2 text-center">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    Navigation tracking active - Current: {currentPageUrl || 'No URL'}
                   </div>
                 </div>
               </div>
