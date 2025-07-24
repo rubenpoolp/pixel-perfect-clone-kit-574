@@ -121,6 +121,9 @@ const Chat: React.FC<ChatProps> = () => {
   }, []);
 
   useEffect(() => {
+    // Only add welcome message if no messages exist yet
+    if (messages.length > 0) return;
+    
     // Get website data from localStorage
     const storedData = localStorage.getItem('websiteData');
     if (storedData) {
@@ -167,7 +170,7 @@ Let's start!`,
         suggestions: ['Add my website', 'Go back to setup']
       });
     }
-  }, [searchParams, setSearchParams, extractPageName, getInitialSuggestions, addMessage]);
+  }, [messages.length]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
