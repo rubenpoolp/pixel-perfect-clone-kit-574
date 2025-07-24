@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link, Settings } from 'lucide-react';
-import { OpenAIService } from '@/services/OpenAIService';
-import { ApiKeySetup } from '@/components/ApiKeySetup';
+import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link } from 'lucide-react';
+import { AnalysisService } from '@/services/AnalysisService';
 import { useToast } from '@/components/ui/use-toast';
 
 interface Message {
@@ -44,7 +43,6 @@ const Chat: React.FC<ChatProps> = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showApiKeySetup, setShowApiKeySetup] = useState(false);
 
   const extractPageName = useCallback((url: string): string => {
     try {
@@ -121,13 +119,6 @@ const Chat: React.FC<ChatProps> = () => {
     setMessages(prev => [...prev, newMessage]);
   }, []);
 
-  // Check if OpenAI is configured
-  useEffect(() => {
-    if (!OpenAIService.isConfigured()) {
-      setShowApiKeySetup(true);
-    }
-  }, []);
-
   useEffect(() => {
     // Get website data from localStorage
     const storedData = localStorage.getItem('websiteData');
@@ -153,12 +144,8 @@ const Chat: React.FC<ChatProps> = () => {
       setSearchParams({ page: initialUrl });
       
       // Create personalized first message
-      const welcomeContent = OpenAIService.isConfigured() 
-        ? `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n✅ **OpenAI integration active** - You'll get real AI-powered insights!\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`
-        : `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n⚠️ **Demo mode** - Configure OpenAI API key for real insights!\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`;
-
       addMessage({
-        content: welcomeContent,
+        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n✅ **Jackie is ready** - Ask me anything about optimizing your website!\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
@@ -200,84 +187,34 @@ const Chat: React.FC<ChatProps> = () => {
     });
 
     try {
-      if (OpenAIService.isConfigured()) {
-        // Use real OpenAI API
-        const analysis = await OpenAIService.analyzeWebsite({
-          websiteUrl: websiteData.websiteUrl,
-          currentPage: currentPageName,
-          productType: websiteData.productType,
-          userQuestion: userMessage
-        });
+      // Use AnalysisService which handles both real AI and fallback
+      const analysis = await AnalysisService.analyzeWebsite({
+        websiteUrl: websiteData.websiteUrl,
+        currentPage: currentPageName,
+        productType: websiteData.productType,
+        userQuestion: userMessage
+      });
 
-        addMessage({
-          content: analysis.content,
-          sender: 'ai',
-          timestamp: new Date(),
-          suggestions: analysis.suggestions,
-          pageContext: currentPageName
-        });
-      } else {
-        // Fallback to simulated response
-        const getPageSpecificContext = (pageName: string, productType: string): string => {
-          const contexts: { [key: string]: { [key: string]: string } } = {
-            'ecommerce': {
-              'Homepage': 'homepage conversion, hero section effectiveness, navigation clarity',
-              'Product': 'product presentation, add-to-cart optimization, review display',
-              'Pricing': 'pricing strategy, plan comparison, checkout flow',
-              'Cart': 'cart abandonment, checkout process, payment options',
-              'About': 'trust building, brand story, customer testimonials'
-            },
-            'saas': {
-              'Homepage': 'value proposition clarity, trial signup, feature highlights',
-              'Pricing': 'plan comparison, trial-to-paid conversion, pricing psychology',
-              'Features': 'feature presentation, benefit clarity, demo requests',
-              'About': 'team credibility, company story, customer success',
-              'Contact': 'lead generation, sales funnel, support accessibility'
-            },
-            'blog': {
-              'Homepage': 'content discovery, subscription conversion, navigation',
-              'Post': 'content engagement, related posts, sharing optimization',
-              'About': 'author credibility, newsletter signup, personal brand',
-              'Contact': 'reader engagement, collaboration opportunities'
-            }
-          };
-          
-          return contexts[productType]?.[pageName] || 'general page optimization, user experience, conversion elements';
-        };
-
-        const pageContext = getPageSpecificContext(currentPageName, websiteData.productType);
-        let aiResponse = `**Demo Response** - Looking at your **${currentPageName}** page, I can help you improve ${pageContext}.\n\n`;
-        
-        if (currentPageName.toLowerCase().includes('pricing')) {
-          aiResponse += "**Pricing Page Optimization:**\n• Test different pricing layouts (grid vs. table)\n• Highlight recommended plan with visual emphasis\n• Add social proof and testimonials\n• Simplify plan comparison with clear differentiators\n• Optimize CTA buttons for trial/purchase conversion";
-        } else if (currentPageName.toLowerCase().includes('product')) {
-          aiResponse += "**Product Page Optimization:**\n• Improve product images and gallery\n• Optimize product descriptions for conversion\n• Add customer reviews and ratings\n• Implement urgency elements (stock levels, time-limited offers)\n• Enhance add-to-cart visibility and experience";
-        } else if (currentPageName.toLowerCase().includes('home')) {
-          aiResponse += "**Homepage Optimization:**\n• Strengthen value proposition in hero section\n• Improve navigation and user journey clarity\n• Add trust signals and social proof\n• Optimize call-to-action placement and copy\n• Enhance mobile responsiveness and load speed";
-        } else {
-          aiResponse += `**${currentPageName} Page Optimization:**\n• Analyze page-specific conversion goals\n• Improve content clarity and user flow\n• Optimize call-to-action elements\n• Enhance visual hierarchy and readability\n• Test different layout variations for better performance`;
-        }
-
-        addMessage({
-          content: aiResponse,
-          sender: 'ai',
-          timestamp: new Date(),
-          pageContext: currentPageName
-        });
-      }
+      addMessage({
+        content: analysis.content,
+        sender: 'ai',
+        timestamp: new Date(),
+        suggestions: analysis.suggestions,
+        pageContext: currentPageName
+      });
     } catch (error) {
       console.error('Error getting AI response:', error);
       addMessage({
-        content: 'Sorry, I encountered an error while analyzing your website. Please try again or check your API key configuration.',
+        content: 'Sorry, I encountered an error while analyzing your website. Please try again.',
         sender: 'ai',
         timestamp: new Date(),
-        suggestions: ['Check API key', 'Try again', 'Contact support'],
+        suggestions: ['Try again', 'Ask a different question', 'Check your connection'],
         pageContext: currentPageName
       });
       
       toast({
         title: "Analysis Error",
-        description: "Failed to get AI insights. Please check your setup.",
+        description: "Failed to get AI insights. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -313,10 +250,6 @@ const Chat: React.FC<ChatProps> = () => {
     });
   }, [extractPageName, setSearchParams, addMessage]);
 
-  if (showApiKeySetup) {
-    return <ApiKeySetup onSuccess={() => setShowApiKeySetup(false)} />;
-  }
-
   return (
     <div className="bg-neutral-900 flex flex-col h-screen text-white">
       <div className="flex flex-1 overflow-hidden">
@@ -329,13 +262,6 @@ const Chat: React.FC<ChatProps> = () => {
               <h1 className="text-gray-200 text-lg font-medium">{websiteData ? new URL(websiteData.websiteUrl).hostname : 'No website'}</h1>
             </div>
             <div className="flex items-center gap-2 relative">
-              <button 
-                onClick={() => setShowApiKeySetup(true)}
-                className="p-2 hover:bg-neutral-800 rounded-lg"
-                title="Configure API Key"
-              >
-                <Settings className="w-5 h-5 text-gray-400" />
-              </button>
               <button 
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="p-2 hover:bg-neutral-800 rounded-lg"
@@ -357,17 +283,6 @@ const Chat: React.FC<ChatProps> = () => {
                         className="w-full text-left px-4 py-2 text-gray-200 hover:bg-neutral-700 transition-colors"
                       >
                         Change Website
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => {
-                          setShowDropdown(false);
-                          setShowApiKeySetup(true);
-                        }}
-                        className="w-full text-left px-4 py-2 text-gray-200 hover:bg-neutral-700 transition-colors"
-                      >
-                        Configure API Key
                       </button>
                     </li>
                   </ul>
