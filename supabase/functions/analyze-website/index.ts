@@ -243,14 +243,17 @@ ANALYSIS APPROACH FOR UNSCRAPABLE PAGES:
 - Compare to what you'd expect to see on high-converting pages of this type
 
 RESPONSE FORMAT:
-🔍 WHAT THIS PAGE SHOULD CONTAIN
-📊 VS INDUSTRY LEADERS  
-⚡ IMMEDIATE OPTIMIZATION PRIORITIES
-💡 CONVERSION BEST PRACTICES
+- BE CONCISE - Keep responses under 150 words total
+- NO asterisks, bold formatting, or special characters
+- Use simple bullet points with dashes (-)
+- Structure with these sections only:
+WHAT THIS PAGE SHOULD CONTAIN
+VS INDUSTRY LEADERS  
+IMMEDIATE FIXES
 
 Focus on what a high-converting ${currentPage.toLowerCase()} page typically needs and common optimization opportunities for ${productType} companies.
 
-Keep it specific, actionable, and focused on conversion optimization.`
+Keep it brief, specific, and actionable.`
   }
 
   const basePrompt = `You are Jackie, an expert website optimization consultant. Analyze SPECIFICALLY what you see on this exact page and compare it to industry leaders.
@@ -274,17 +277,13 @@ CRITICAL ANALYSIS REQUIREMENTS:
 - Users should see immediate value by understanding exactly what's wrong with THIS specific page content
 
 RESPONSE FORMAT:
-- Use UPPERCASE for section titles 
-- Use bullet points (-) and numbered lists (1., 2., 3.)
-- Keep responses SHORT and focused (max 250 words)
-- Each point must reference something SPECIFIC on this page
-- Include competitor comparisons where relevant
-
-Structure with these sections:
-🔍 WHAT I SEE ON THIS PAGE
-📊 VS INDUSTRY LEADERS  
-⚡ IMMEDIATE FIXES
-💡 COMPETITIVE ADVANTAGE
+- BE CONCISE - Keep responses under 150 words total
+- NO asterisks, bold formatting, or special characters
+- Use simple bullet points with dashes (-)
+- Structure with these sections only:
+WHAT I SEE ON THIS PAGE
+VS INDUSTRY LEADERS  
+IMMEDIATE FIXES
 
 Focus on:`
 
@@ -296,7 +295,7 @@ Focus on:`
 
   return basePrompt + specificGuidance + `
 
-Remember: Only analyze what you can actually see on THIS SPECIFIC PAGE. Compare specific elements to competitors. No generic advice.`
+Remember: Be concise, avoid asterisks, and only analyze what you can actually see on THIS SPECIFIC PAGE. Compare specific elements to competitors.`
 }
 
 function extractMetrics(content: string): Record<string, any> {
