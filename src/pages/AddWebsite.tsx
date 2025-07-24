@@ -34,7 +34,7 @@ const AddWebsite = () => {
         <form onSubmit={handleSubmit} className="bg-[rgba(247,244,237,1)] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1)] border flex flex-col items-stretch p-6 sm:p-8 rounded-2xl sm:rounded-[28px] border-[rgba(28,28,28,0.2)] border-solid">
           <div className="mb-6">
             <label htmlFor="website-url" className="block text-[rgba(28,28,28,1)] text-sm font-medium mb-2">
-              URL
+              URL of the Page
             </label>
             <input
               id="website-url"
