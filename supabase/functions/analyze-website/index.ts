@@ -320,7 +320,7 @@ CRITICAL REQUIREMENTS:
 - Give exact copy suggestions, not generic advice
 - Include estimated conversion impact percentages
 - Reference specific page elements by their actual content
-- Provide implementation details, not just concepts
+- Provide implementation details, not just concepts`
 
   let specificGuidance = 'Focus on high-impact conversion opportunities, specific competitor strategies, and actionable optimization wins.'
   
