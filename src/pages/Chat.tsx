@@ -33,6 +33,7 @@ const Chat: React.FC<ChatProps> = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     // Get website data from localStorage
@@ -259,12 +260,33 @@ const Chat: React.FC<ChatProps> = () => {
               <Link className="w-5 h-5 text-gray-400" />
               <h1 className="text-white text-lg font-medium">{websiteData ? new URL(websiteData.websiteUrl).hostname : 'No website'}</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-gray-800 rounded-lg">
+            <div className="flex items-center gap-2 relative">
+              <button 
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="p-2 hover:bg-gray-800 rounded-lg"
+              >
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
+              
+              {showDropdown && (
+                <div className="absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+                  <ul className="py-2">
+                    <li>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          navigate('/add-website');
+                        }}
+                        className="w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700 transition-colors"
+                      >
+                        Change Website
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
