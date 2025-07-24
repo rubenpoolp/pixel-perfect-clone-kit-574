@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart } from 'lucide-react';
+import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -9,6 +9,7 @@ interface Message {
   sender: 'user' | 'ai';
   timestamp: Date;
   suggestions?: string[];
+  pageContext?: string;
 }
 
 interface WebsiteData {
@@ -23,10 +24,13 @@ interface ChatProps {
 
 const Chat: React.FC<ChatProps> = () => {
   const [websiteData, setWebsiteData] = useState<WebsiteData | null>(null);
+  const [currentPageUrl, setCurrentPageUrl] = useState<string>('');
+  const [currentPageName, setCurrentPageName] = useState<string>('Homepage');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     // Get website data from localStorage
@@ -34,14 +38,16 @@ const Chat: React.FC<ChatProps> = () => {
     if (storedData) {
       const data: WebsiteData = JSON.parse(storedData);
       setWebsiteData(data);
+      setCurrentPageUrl(data.websiteUrl);
       
       // Create personalized first message
       const welcomeMessage: Message = {
         id: '1',
-        content: `Great! I've analyzed your ${data.productType} website at **${data.websiteUrl}**. I'm here to help you optimize it for better performance and conversions.\n\nBased on your ${data.productType} type, here are some key areas we can focus on:`,
+        content: `Great! I've analyzed your ${data.productType} website at **${data.websiteUrl}**. I'm currently viewing your **Homepage**.\n\nI can help you optimize any page of your website. Navigate to different pages using the preview on the right, and I'll provide page-specific insights and recommendations.\n\nWhat would you like to improve?`,
         sender: 'ai',
         timestamp: new Date(),
-        suggestions: getInitialSuggestions(data.productType)
+        suggestions: getInitialSuggestions(data.productType),
+        pageContext: 'Homepage'
       };
       setMessages([welcomeMessage]);
     }
@@ -50,37 +56,81 @@ const Chat: React.FC<ChatProps> = () => {
   const getInitialSuggestions = (productType: string): string[] => {
     const suggestions: { [key: string]: string[] } = {
       'ecommerce': [
-        "Analyze cart abandonment rates",
-        "Optimize product page conversions", 
-        "Improve checkout flow",
-        "Review mobile shopping experience"
+        "Analyze this page's conversion potential",
+        "Review checkout flow optimization",
+        "Improve product page layout",
+        "Optimize mobile experience"
       ],
       'saas': [
-        "Optimize signup conversion funnel",
-        "Analyze free trial to paid conversions",
-        "Improve onboarding experience",
-        "Review pricing page effectiveness"
+        "Optimize signup conversion on this page",
+        "Analyze pricing page effectiveness",
+        "Improve onboarding flow",
+        "Review feature presentation"
       ],
       'blog': [
-        "Increase content engagement",
-        "Optimize for SEO",
+        "Increase engagement on this page",
+        "Optimize content for SEO",
         "Improve newsletter signups",
         "Analyze reader retention"
       ],
       'portfolio': [
-        "Optimize contact form conversions",
+        "Optimize contact conversion",
         "Improve project showcase",
-        "Enhance personal branding",
+        "Enhance page design",
         "Analyze visitor engagement"
       ]
     };
     
     return suggestions[productType] || [
-      "Analyze user behavior patterns",
+      "Analyze this page's performance",
       "Improve conversion rates",
       "Optimize page load speeds",
       "Enhance user experience"
     ];
+  };
+
+  const getPageSpecificContext = (pageName: string, productType: string): string => {
+    const contexts: { [key: string]: { [key: string]: string } } = {
+      'ecommerce': {
+        'Homepage': 'homepage conversion, hero section effectiveness, navigation clarity',
+        'Product': 'product presentation, add-to-cart optimization, review display',
+        'Pricing': 'pricing strategy, plan comparison, checkout flow',
+        'Cart': 'cart abandonment, checkout process, payment options',
+        'About': 'trust building, brand story, customer testimonials'
+      },
+      'saas': {
+        'Homepage': 'value proposition clarity, trial signup, feature highlights',
+        'Pricing': 'plan comparison, trial-to-paid conversion, pricing psychology',
+        'Features': 'feature presentation, benefit clarity, demo requests',
+        'About': 'team credibility, company story, customer success',
+        'Contact': 'lead generation, sales funnel, support accessibility'
+      },
+      'blog': {
+        'Homepage': 'content discovery, subscription conversion, navigation',
+        'Post': 'content engagement, related posts, sharing optimization',
+        'About': 'author credibility, newsletter signup, personal brand',
+        'Contact': 'reader engagement, collaboration opportunities'
+      }
+    };
+    
+    return contexts[productType]?.[pageName] || 'general page optimization, user experience, conversion elements';
+  };
+
+  const navigateToPage = (url: string) => {
+    setCurrentPageUrl(url);
+    // Extract page name from URL for context
+    const pageName = url.split('/').pop()?.split('?')[0] || 'Homepage';
+    setCurrentPageName(pageName.charAt(0).toUpperCase() + pageName.slice(1) || 'Homepage');
+    
+    // Add context message
+    const contextMessage: Message = {
+      id: Date.now().toString(),
+      content: `📍 Navigated to **${pageName.charAt(0).toUpperCase() + pageName.slice(1)}** page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
+      sender: 'ai',
+      timestamp: new Date(),
+      pageContext: pageName
+    };
+    setMessages(prev => [...prev, contextMessage]);
   };
 
   const scrollToBottom = () => {
@@ -99,36 +149,37 @@ const Chat: React.FC<ChatProps> = () => {
       id: Date.now().toString(),
       content: inputMessage,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      pageContext: currentPageName
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate AI response with website-specific insights
+    // Simulate AI response with page-specific insights
     setTimeout(() => {
-      let aiResponse = "I understand you want to improve that aspect. ";
+      const pageContext = getPageSpecificContext(currentPageName, websiteData?.productType || '');
+      let aiResponse = `Looking at your **${currentPageName}** page, I can help you improve ${pageContext}.\n\n`;
       
       if (websiteData) {
-        aiResponse += `For your ${websiteData.productType} website (${websiteData.websiteUrl}), here are some specific recommendations:\n\n`;
-        
-        if (websiteData.productType === 'ecommerce') {
-          aiResponse += "• **Product Page Optimization**: Add trust badges, customer reviews, and clear CTAs\n• **Cart Recovery**: Implement abandoned cart email sequences\n• **Mobile Experience**: Ensure seamless mobile checkout process";
-        } else if (websiteData.productType === 'saas') {
-          aiResponse += "• **Trial Optimization**: Reduce signup friction and provide instant value\n• **Feature Highlighting**: Use progressive disclosure to showcase key benefits\n• **Social Proof**: Add customer testimonials and usage statistics";
+        if (currentPageName.toLowerCase().includes('pricing')) {
+          aiResponse += "**Pricing Page Optimization:**\n• Test different pricing layouts (grid vs. table)\n• Highlight recommended plan with visual emphasis\n• Add social proof and testimonials\n• Simplify plan comparison with clear differentiators\n• Optimize CTA buttons for trial/purchase conversion";
+        } else if (currentPageName.toLowerCase().includes('product')) {
+          aiResponse += "**Product Page Optimization:**\n• Improve product images and gallery\n• Optimize product descriptions for conversion\n• Add customer reviews and ratings\n• Implement urgency elements (stock levels, time-limited offers)\n• Enhance add-to-cart visibility and experience";
+        } else if (currentPageName.toLowerCase().includes('home')) {
+          aiResponse += "**Homepage Optimization:**\n• Strengthen value proposition in hero section\n• Improve navigation and user journey clarity\n• Add trust signals and social proof\n• Optimize call-to-action placement and copy\n• Enhance mobile responsiveness and load speed";
         } else {
-          aiResponse += "• **Performance Audit**: Check page load speeds and Core Web Vitals\n• **Content Strategy**: Optimize for user intent and engagement\n• **Conversion Points**: Identify and optimize key conversion opportunities";
+          aiResponse += `**${currentPageName} Page Optimization:**\n• Analyze page-specific conversion goals\n• Improve content clarity and user flow\n• Optimize call-to-action elements\n• Enhance visual hierarchy and readability\n• Test different layout variations for better performance`;
         }
-      } else {
-        aiResponse += "Based on best practices, here are some actionable recommendations I can help you implement...";
       }
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
+        pageContext: currentPageName
       };
       setMessages(prev => [...prev, aiMessage]);
       setIsLoading(false);
@@ -268,12 +319,57 @@ const Chat: React.FC<ChatProps> = () => {
             <div className="flex flex-col h-full">
               {/* Website Info Header */}
               <div className="bg-white border-b border-[rgba(28,28,28,0.1)] p-4">
-                <div className="flex items-center gap-2">
-                  <ExternalLink className="w-4 h-4 text-[rgba(95,95,93,1)]" />
-                  <span className="text-[rgba(28,28,28,1)] font-medium">{websiteData.websiteUrl}</span>
-                  <span className="bg-[rgba(247,244,237,1)] text-[rgba(95,95,93,1)] px-2 py-1 rounded text-xs">
-                    {websiteData.productType}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4 text-[rgba(95,95,93,1)]" />
+                    <span className="text-[rgba(28,28,28,1)] font-medium">{currentPageName}</span>
+                    <span className="bg-[rgba(247,244,237,1)] text-[rgba(95,95,93,1)] px-2 py-1 rounded text-xs">
+                      {websiteData.productType}
+                    </span>
+                  </div>
+                  
+                  {/* Navigation Controls */}
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => iframeRef.current?.contentWindow?.history.back()}
+                      className="p-1 hover:bg-gray-100 rounded"
+                      title="Go Back"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-[rgba(95,95,93,1)]" />
+                    </button>
+                    <button 
+                      onClick={() => iframeRef.current?.contentWindow?.history.forward()}
+                      className="p-1 hover:bg-gray-100 rounded"
+                      title="Go Forward"
+                    >
+                      <ArrowRight className="w-4 h-4 text-[rgba(95,95,93,1)]" />
+                    </button>
+                    <button 
+                      onClick={() => iframeRef.current?.contentWindow?.location.reload()}
+                      className="p-1 hover:bg-gray-100 rounded"
+                      title="Reload"
+                    >
+                      <RotateCcw className="w-4 h-4 text-[rgba(95,95,93,1)]" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* URL Input */}
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="url"
+                    value={currentPageUrl}
+                    onChange={(e) => setCurrentPageUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && navigateToPage(currentPageUrl)}
+                    className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Enter page URL..."
+                  />
+                  <button
+                    onClick={() => navigateToPage(currentPageUrl)}
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Go
+                  </button>
                 </div>
               </div>
               
@@ -281,21 +377,25 @@ const Chat: React.FC<ChatProps> = () => {
               <div className="flex-1 p-4">
                 <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden">
                   <iframe
-                    src={websiteData.websiteUrl}
+                    ref={iframeRef}
+                    src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
-                    sandbox="allow-same-origin allow-scripts allow-forms"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-navigation"
                   />
                 </div>
               </div>
               
-              {/* Quick Analysis Panel */}
+              {/* Page Context Panel */}
               <div className="bg-white border-t border-[rgba(28,28,28,0.1)] p-4 max-h-48 overflow-y-auto">
                 <h3 className="text-[rgba(28,28,28,1)] text-sm font-medium mb-2 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
-                  Key Focus Areas
+                  {currentPageName} Page Focus Areas
                 </h3>
                 <div className="space-y-1">
+                  <div className="text-xs text-[rgba(95,95,93,1)] mb-2">
+                    Context: {getPageSpecificContext(currentPageName, websiteData.productType)}
+                  </div>
                   {getInitialSuggestions(websiteData.productType).slice(0, 3).map((area, index) => (
                     <div key={index} className="flex items-center gap-2 text-xs text-[rgba(95,95,93,1)]">
                       <div className="w-1.5 h-1.5 bg-[rgba(28,28,28,1)] rounded-full"></div>
