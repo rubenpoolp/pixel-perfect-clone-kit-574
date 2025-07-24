@@ -146,6 +146,20 @@ serve(async (req) => {
 async function scrapePageContent(url: string, apiKey: string): Promise<string> {
   try {
     console.log(`Attempting to scrape: ${url}`)
+    console.log(`Using Firecrawl API key: ${apiKey ? 'Present' : 'Missing'}`)
+    
+    const requestBody = {
+      url,
+      formats: ['markdown'],
+      includeTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'button', 'span', 'div', 'li', 'ul', 'ol'],
+      excludeTags: ['script', 'style', 'noscript', 'nav', 'footer', 'header'],
+      onlyMainContent: true,
+      waitFor: 3000,
+      screenshot: false,
+      fullPageScreenshot: false
+    }
+    
+    console.log(`Firecrawl request body:`, JSON.stringify(requestBody, null, 2))
     
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
@@ -153,44 +167,92 @@ async function scrapePageContent(url: string, apiKey: string): Promise<string> {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url,
-        formats: ['markdown'],
-        includeTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'button', 'span', 'div', 'li', 'ul', 'ol'],
-        excludeTags: ['script', 'style', 'noscript', 'nav', 'footer', 'header'],
-        onlyMainContent: true,
-        waitFor: 3000, // Wait for JavaScript to load
-        screenshot: false,
-        fullPageScreenshot: false
-      }),
+      body: JSON.stringify(requestBody),
     })
+
+    console.log(`Firecrawl response status: ${response.status}`)
+    console.log(`Firecrawl response headers:`, Object.fromEntries(response.headers.entries()))
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Firecrawl API error:', response.status, errorText)
-      return `Unable to scrape page content (HTTP ${response.status}) - will analyze based on URL structure`
+      console.error('Firecrawl API detailed error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorBody: errorText,
+        url: url
+      })
+      
+      // For debugging, let's try to provide useful analysis even when scraping fails
+      return `SCRAPING_FAILED: HTTP ${response.status} - ${response.statusText}. Error: ${errorText}. 
+      
+However, based on the URL pattern (${url}), this appears to be a pricing page. I can still provide optimization advice based on pricing page best practices.`
     }
 
     const data = await response.json()
-    console.log('Firecrawl response:', JSON.stringify(data, null, 2))
+    console.log('Firecrawl successful response structure:', Object.keys(data))
+    console.log('Firecrawl response data keys:', data.data ? Object.keys(data.data) : 'No data property')
     
     const content = data.data?.markdown || data.data?.html || data.markdown || ''
     
     if (!content || content.trim().length < 50) {
-      console.log('No meaningful content found, trying alternative approach')
-      return `Page appears to be JavaScript-heavy or protected. URL: ${url} - will provide general optimization advice for this page type.`
+      console.log('No meaningful content found in response:', {
+        contentLength: content?.length || 0,
+        hasDataProperty: !!data.data,
+        dataKeys: data.data ? Object.keys(data.data) : 'None'
+      })
+      return `CONTENT_EMPTY: Page appears to load but has minimal content. This might be a JavaScript-heavy page or require user interaction. 
+
+Based on the URL (${url}), I can still provide pricing page optimization advice.`
     }
     
-    console.log(`Successfully scraped ${content.length} characters`)
+    console.log(`Successfully scraped ${content.length} characters from ${url}`)
     // Limit content length to prevent OpenAI token limits
     return content.substring(0, 6000)
   } catch (error) {
-    console.error('Error scraping page:', error)
-    return `Unable to scrape page content due to error: ${error.message} - will analyze based on URL structure and best practices`
+    console.error('Error scraping page - full details:', {
+      message: error.message,
+      stack: error.stack,
+      url: url
+    })
+    return `SCRAPING_ERROR: ${error.message}. 
+
+Despite the scraping issue, I can analyze this as a pricing page based on the URL pattern and provide optimization recommendations.`
   }
 }
 
 function createSystemPrompt(websiteUrl: string, currentPage: string, productType: string, pageContent: string, industry?: string, analysisType?: string): string {
+  
+  // Check if scraping failed and adjust prompt accordingly
+  const scrapingFailed = pageContent.includes('SCRAPING_FAILED') || pageContent.includes('SCRAPING_ERROR') || pageContent.includes('CONTENT_EMPTY')
+  
+  if (scrapingFailed) {
+    return `You are Jackie, an expert website optimization consultant. 
+
+IMPORTANT: The page content could not be scraped (${pageContent.split('.')[0]}), but you can still provide valuable analysis.
+
+Current Page: ${currentPage}
+Website: ${websiteUrl}  
+Product Type: ${productType}
+${industry ? `Industry: ${industry}` : ''}
+
+ANALYSIS APPROACH FOR UNSCRAPABLE PAGES:
+- Analyze based on the URL pattern and page type
+- Provide industry-standard optimization advice for this type of page
+- Reference common issues found on similar pages in the ${productType} industry
+- Give specific, actionable recommendations based on best practices
+- Compare to what you'd expect to see on high-converting pages of this type
+
+RESPONSE FORMAT:
+🔍 WHAT THIS PAGE SHOULD CONTAIN
+📊 VS INDUSTRY LEADERS  
+⚡ IMMEDIATE OPTIMIZATION PRIORITIES
+💡 CONVERSION BEST PRACTICES
+
+Focus on what a high-converting ${currentPage.toLowerCase()} page typically needs and common optimization opportunities for ${productType} companies.
+
+Keep it specific, actionable, and focused on conversion optimization.`
+  }
+
   const basePrompt = `You are Jackie, an expert website optimization consultant. Analyze SPECIFICALLY what you see on this exact page and compare it to industry leaders.
 
 Current Page Being Analyzed: ${currentPage}
