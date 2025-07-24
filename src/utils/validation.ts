@@ -1,10 +1,44 @@
 // URL validation utilities for security
 
+const BLOCKED_DOMAINS = [
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '::1',
+  'internal',
+  'local'
+];
+
+const SUSPICIOUS_PATTERNS = [
+  /javascript:/i,
+  /data:/i,
+  /file:/i,
+  /ftp:/i,
+  /<script/i,
+  /\.\./
+];
+
 export function isValidUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
+    
     // Only allow http and https protocols
-    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+      return false;
+    }
+    
+    // Block internal/private networks
+    const hostname = urlObj.hostname.toLowerCase();
+    if (BLOCKED_DOMAINS.some(domain => hostname.includes(domain))) {
+      return false;
+    }
+    
+    // Check for suspicious patterns
+    if (SUSPICIOUS_PATTERNS.some(pattern => pattern.test(url))) {
+      return false;
+    }
+    
+    return true;
   } catch {
     return false;
   }

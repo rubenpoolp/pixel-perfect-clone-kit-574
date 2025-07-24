@@ -1,4 +1,7 @@
 
+import { supabase } from "@/integrations/supabase/client";
+import { validateAndSanitizeUrl } from "@/utils/validation";
+import { analysisRateLimiter, getClientIdentifier, logSecurityEvent } from "@/utils/rateLimiter";
 
 interface AnalysisRequest {
   websiteUrl: string;
@@ -26,26 +29,38 @@ interface AnalysisResponse {
 export class AnalysisService {
   static async analyzeWebsite(request: AnalysisRequest): Promise<AnalysisResponse> {
     try {
-      // Validate URL before processing
-      if (!request.websiteUrl || request.websiteUrl.trim() === '') {
-        throw new Error('Website URL is required');
+      // Rate limiting check
+      const clientId = getClientIdentifier();
+      const rateLimitCheck = analysisRateLimiter.checkLimit(clientId);
+      
+      if (!rateLimitCheck.allowed) {
+        const resetMinutes = Math.ceil((rateLimitCheck.resetTime! - Date.now()) / 60000);
+        logSecurityEvent('rate_limit_exceeded', { clientId, url: request.websiteUrl });
+        throw new Error(`Too many requests. Please wait ${resetMinutes} minutes before trying again.`);
       }
 
-      // Basic URL format validation
-      try {
-        const url = new URL(request.websiteUrl);
-        if (!['http:', 'https:'].includes(url.protocol)) {
-          throw new Error('Invalid URL protocol');
-        }
-      } catch {
-        throw new Error('Invalid URL format. Please enter a valid URL starting with http:// or https://');
+      // Enhanced URL validation
+      const validation = validateAndSanitizeUrl(request.websiteUrl);
+      if (!validation.isValid) {
+        logSecurityEvent('invalid_url_attempt', { url: request.websiteUrl, error: validation.error });
+        throw new Error(validation.error || 'Invalid URL provided');
       }
+
+      // Log successful analysis request
+      logSecurityEvent('analysis_request', { 
+        url: validation.sanitizedUrl, 
+        page: request.currentPage,
+        type: request.analysisType 
+      });
 
       // Use Supabase functions for the analysis
       const { supabase } = await import('@/integrations/supabase/client');
       
       const { data, error } = await supabase.functions.invoke('analyze-website', {
-        body: JSON.stringify(request)
+        body: JSON.stringify({
+          ...request,
+          websiteUrl: validation.sanitizedUrl
+        })
       });
 
       if (error) {
@@ -69,10 +84,11 @@ export class AnalysisService {
     } catch (error) {
       console.error('Analysis service error:', error);
       
-      // Re-throw validation errors to show proper message
+      // Re-throw validation and rate limit errors to show proper message
       if (error instanceof Error && (
         error.message.includes('Invalid URL') ||
-        error.message.includes('required')
+        error.message.includes('required') ||
+        error.message.includes('Too many requests')
       )) {
         throw error;
       }
