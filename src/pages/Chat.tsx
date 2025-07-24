@@ -176,39 +176,65 @@ const Chat: React.FC<ChatProps> = () => {
     setMessages(prev => [...prev, contextMessage]);
   };
 
-  // Listen for iframe navigation changes
+  // Monitor iframe for navigation changes using a different approach
   useEffect(() => {
+    if (!websiteData) return;
+
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const handleIframeLoad = () => {
-      try {
-        const iframeUrl = iframe.contentWindow?.location.href;
-        if (iframeUrl && iframeUrl !== currentPageUrl) {
-          const pageName = extractPageName(iframeUrl);
-          setCurrentPageUrl(iframeUrl);
-          setCurrentPageName(pageName);
-          setSearchParams({ page: iframeUrl });
-          
-          // Add navigation context message
-          const contextMessage: Message = {
-            id: Date.now().toString(),
-            content: `📍 You've navigated to **${pageName}** page. I can now provide specific insights and recommendations for this page.`,
-            sender: 'ai',
-            timestamp: new Date(),
-            pageContext: pageName
-          };
-          setMessages(prev => [...prev, contextMessage]);
+    // Create a mutation observer to watch for src changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+          const newSrc = iframe.src;
+          if (newSrc && newSrc !== currentPageUrl) {
+            const pageName = extractPageName(newSrc);
+            setCurrentPageUrl(newSrc);
+            setCurrentPageName(pageName);
+            setSearchParams({ page: newSrc });
+            
+            const contextMessage: Message = {
+              id: Date.now().toString(),
+              content: `📍 Navigated to **${pageName}** page. I can now provide specific insights for this page.`,
+              sender: 'ai',
+              timestamp: new Date(),
+              pageContext: pageName
+            };
+            setMessages(prev => [...prev, contextMessage]);
+          }
         }
-      } catch (error) {
-        // Cross-origin restrictions - this is expected for external sites
-        console.log('Cannot access iframe URL due to cross-origin restrictions');
-      }
-    };
+      });
+    });
 
-    iframe.addEventListener('load', handleIframeLoad);
-    return () => iframe.removeEventListener('load', handleIframeLoad);
-  }, [currentPageUrl, setSearchParams]);
+    // Observe the iframe for attribute changes
+    observer.observe(iframe, {
+      attributes: true,
+      attributeFilter: ['src']
+    });
+
+    return () => observer.disconnect();
+  }, [websiteData, setSearchParams]);
+
+  // Add click tracking overlay to detect navigation
+  const handleIframeInteraction = () => {
+    // When user interacts with iframe, check if URL should change
+    setTimeout(() => {
+      const iframe = iframeRef.current;
+      if (iframe) {
+        try {
+          // Try to get the current URL - this will fail for cross-origin
+          const newUrl = iframe.contentWindow?.location.href;
+          if (newUrl && newUrl !== currentPageUrl) {
+            navigateToPage(newUrl);
+          }
+        } catch (e) {
+          // For cross-origin, we'll manually track common navigation patterns
+          console.log('Cross-origin navigation detected, manual tracking required');
+        }
+      }
+    }, 1000);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -464,43 +490,56 @@ const Chat: React.FC<ChatProps> = () => {
               
               {/* Website Preview */}
               <div className="flex-1 p-4">
-                <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden">
+                <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden relative">
                   <iframe
                     ref={iframeRef}
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups"
-                    onLoad={() => {
-                      // Try to detect URL changes
-                      setTimeout(() => {
-                        try {
-                          const iframe = iframeRef.current;
-                          if (iframe?.contentWindow) {
-                            const newUrl = iframe.contentWindow.location.href;
-                            if (newUrl !== currentPageUrl) {
-                              const pageName = extractPageName(newUrl);
-                              setCurrentPageUrl(newUrl);
-                              setCurrentPageName(pageName);
-                              setSearchParams({ page: newUrl });
-                              
-                              const contextMessage: Message = {
-                                id: Date.now().toString(),
-                                content: `📍 Navigated to **${pageName}** page. I can now provide specific insights for this page.`,
-                                sender: 'ai',
-                                timestamp: new Date(),
-                                pageContext: pageName
-                              };
-                              setMessages(prev => [...prev, contextMessage]);
-                            }
-                          }
-                        } catch (error) {
-                          // Handle cross-origin restrictions
-                          console.log('Cross-origin navigation detected');
-                        }
-                      }, 100);
-                    }}
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups allow-pointer-lock"
                   />
+                  {/* Invisible overlay to detect clicks */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none"
+                    onPointerDown={handleIframeInteraction}
+                    style={{ pointerEvents: 'auto', opacity: 0, zIndex: 1 }}
+                  />
+                </div>
+                
+                {/* Manual URL update section */}
+                <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                  <div className="mb-2 text-gray-600">
+                    💡 <strong>Tip:</strong> For external sites, copy the URL from the address bar above and paste it below to track your navigation:
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="Paste the current page URL here..."
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const url = (e.target as HTMLInputElement).value;
+                          if (url) {
+                            navigateToPage(url);
+                            (e.target as HTMLInputElement).value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={(e) => {
+                        const input = (e.target as HTMLButtonElement).parentElement?.querySelector('input') as HTMLInputElement;
+                        const url = input?.value;
+                        if (url) {
+                          navigateToPage(url);
+                          input.value = '';
+                        }
+                      }}
+                      className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                    >
+                      Track
+                    </button>
+                  </div>
                 </div>
               </div>
               
