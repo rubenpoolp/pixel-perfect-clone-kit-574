@@ -154,9 +154,7 @@ async function scrapePageContent(url: string, apiKey: string): Promise<string> {
       includeTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'button', 'span', 'div', 'li', 'ul', 'ol'],
       excludeTags: ['script', 'style', 'noscript', 'nav', 'footer', 'header'],
       onlyMainContent: true,
-      waitFor: 3000,
-      screenshot: false,
-      fullPageScreenshot: false
+      waitFor: 3000
     }
     
     console.log(`Firecrawl request body:`, JSON.stringify(requestBody, null, 2))
