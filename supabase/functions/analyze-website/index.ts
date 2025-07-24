@@ -322,11 +322,13 @@ CRITICAL REQUIREMENTS:
 - Reference specific page elements by their actual content
 - Provide implementation details, not just concepts
 
-  const specificGuidance = analysisType === 'deep-dive' 
-    ? `Focus on advanced conversion psychology, detailed competitive analysis, and sophisticated optimization strategies with precise implementation details.`
-    : analysisType === 'follow-up'
-    ? `Focus on specific changes since last analysis, updated competitive landscape, and advanced optimization opportunities.`
-    : `Focus on high-impact conversion opportunities, specific competitor strategies, and actionable optimization wins.`
+  let specificGuidance = 'Focus on high-impact conversion opportunities, specific competitor strategies, and actionable optimization wins.'
+  
+  if (analysisType === 'deep-dive') {
+    specificGuidance = 'Focus on advanced conversion psychology, detailed competitive analysis, and sophisticated optimization strategies with precise implementation details.'
+  } else if (analysisType === 'follow-up') {
+    specificGuidance = 'Focus on specific changes since last analysis, updated competitive landscape, and advanced optimization opportunities.'
+  }
 
   return basePrompt + specificGuidance
 }
