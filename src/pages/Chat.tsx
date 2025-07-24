@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Header } from '@/components/Header';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 
@@ -23,6 +23,8 @@ interface ChatProps {
 }
 
 const Chat: React.FC<ChatProps> = () => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [websiteData, setWebsiteData] = useState<WebsiteData | null>(null);
   const [currentPageUrl, setCurrentPageUrl] = useState<string>('');
   const [currentPageName, setCurrentPageName] = useState<string>('Homepage');
@@ -38,20 +40,59 @@ const Chat: React.FC<ChatProps> = () => {
     if (storedData) {
       const data: WebsiteData = JSON.parse(storedData);
       setWebsiteData(data);
-      setCurrentPageUrl(data.websiteUrl);
+      
+      // Check if there's a page parameter in URL
+      const pageParam = searchParams.get('page');
+      const initialUrl = pageParam || data.websiteUrl;
+      const initialPageName = pageParam ? extractPageName(pageParam) : 'Homepage';
+      
+      setCurrentPageUrl(initialUrl);
+      setCurrentPageName(initialPageName);
       
       // Create personalized first message
       const welcomeMessage: Message = {
         id: '1',
-        content: `Great! I've analyzed your ${data.productType} website at **${data.websiteUrl}**. I'm currently viewing your **Homepage**.\n\nI can help you optimize any page of your website. Navigate to different pages using the preview on the right, and I'll provide page-specific insights and recommendations.\n\nWhat would you like to improve?`,
+        content: `Great! I've analyzed your ${data.productType} website. I'm currently viewing your **${initialPageName}** page.\n\nI can provide page-specific insights and recommendations. Navigate through your website using the preview, and I'll automatically update to give you targeted advice for each page.\n\nWhat would you like to improve on this page?`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
-        pageContext: 'Homepage'
+        pageContext: initialPageName
       };
       setMessages([welcomeMessage]);
     }
-  }, []);
+  }, [searchParams]);
+
+  const extractPageName = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      const segments = pathname.split('/').filter(Boolean);
+      
+      if (segments.length === 0) return 'Homepage';
+      
+      const lastSegment = segments[segments.length - 1];
+      // Convert common page patterns to readable names
+      const pageNames: { [key: string]: string } = {
+        'pricing': 'Pricing',
+        'about': 'About',
+        'contact': 'Contact',
+        'products': 'Products',
+        'services': 'Services',
+        'blog': 'Blog',
+        'features': 'Features',
+        'support': 'Support',
+        'login': 'Login',
+        'signup': 'Signup',
+        'cart': 'Cart',
+        'checkout': 'Checkout'
+      };
+      
+      return pageNames[lastSegment.toLowerCase()] || 
+             lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
+    } catch {
+      return 'Homepage';
+    }
+  };
 
   const getInitialSuggestions = (productType: string): string[] => {
     const suggestions: { [key: string]: string[] } = {
@@ -118,20 +159,56 @@ const Chat: React.FC<ChatProps> = () => {
 
   const navigateToPage = (url: string) => {
     setCurrentPageUrl(url);
-    // Extract page name from URL for context
-    const pageName = url.split('/').pop()?.split('?')[0] || 'Homepage';
-    setCurrentPageName(pageName.charAt(0).toUpperCase() + pageName.slice(1) || 'Homepage');
+    const pageName = extractPageName(url);
+    setCurrentPageName(pageName);
+    
+    // Update URL with page parameter
+    setSearchParams({ page: url });
     
     // Add context message
     const contextMessage: Message = {
       id: Date.now().toString(),
-      content: `📍 Navigated to **${pageName.charAt(0).toUpperCase() + pageName.slice(1)}** page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
+      content: `📍 Navigated to **${pageName}** page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
       sender: 'ai',
       timestamp: new Date(),
       pageContext: pageName
     };
     setMessages(prev => [...prev, contextMessage]);
   };
+
+  // Listen for iframe navigation changes
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const handleIframeLoad = () => {
+      try {
+        const iframeUrl = iframe.contentWindow?.location.href;
+        if (iframeUrl && iframeUrl !== currentPageUrl) {
+          const pageName = extractPageName(iframeUrl);
+          setCurrentPageUrl(iframeUrl);
+          setCurrentPageName(pageName);
+          setSearchParams({ page: iframeUrl });
+          
+          // Add navigation context message
+          const contextMessage: Message = {
+            id: Date.now().toString(),
+            content: `📍 You've navigated to **${pageName}** page. I can now provide specific insights and recommendations for this page.`,
+            sender: 'ai',
+            timestamp: new Date(),
+            pageContext: pageName
+          };
+          setMessages(prev => [...prev, contextMessage]);
+        }
+      } catch (error) {
+        // Cross-origin restrictions - this is expected for external sites
+        console.log('Cannot access iframe URL due to cross-origin restrictions');
+      }
+    };
+
+    iframe.addEventListener('load', handleIframeLoad);
+    return () => iframe.removeEventListener('load', handleIframeLoad);
+  }, [currentPageUrl, setSearchParams]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -188,8 +265,6 @@ const Chat: React.FC<ChatProps> = () => {
 
   return (
     <div className="bg-white flex flex-col h-screen">
-      <Header />
-      
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Chat Interface (30% width, dark mode) */}
         <div className="w-full md:w-[30%] flex flex-col bg-gray-900 border-r border-gray-700">
