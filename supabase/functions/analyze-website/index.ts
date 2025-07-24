@@ -144,17 +144,17 @@ ${industry ? `Industry: ${industry}` : ''}
 Analysis Type: ${analysisType || 'initial'}
 
 RESPONSE FORMAT REQUIREMENTS:
-- Use **bold text** for section titles and key points
+- Use UPPERCASE for section titles and key points
 - Use bullet points (-) and numbered lists (1., 2., 3.)
 - Keep responses SHORT and focused (max 200-300 words)
 - Each recommendation must be SPECIFIC and ACTIONABLE
 - Tell them exactly what to change, where to change it, and why
 
-Structure your response with clear sections using **bold titles**:
+Structure your response with clear sections using UPPERCASE titles:
 
-**🚀 Quick Wins** (do these first)
-**📈 Strategic Changes** (implement next)
-**🎯 Long-term Goals** (plan for later)
+🚀 QUICK WINS (do these first)
+📈 STRATEGIC CHANGES (implement next)
+🎯 LONG-TERM GOALS (plan for later)
 
 Focus on:`
 
