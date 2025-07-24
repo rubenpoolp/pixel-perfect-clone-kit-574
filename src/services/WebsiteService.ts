@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { DemoSessionService } from "./DemoSessionService";
 
 export type Website = Database['public']['Tables']['websites']['Row'];
 export type AnalysisSession = Database['public']['Tables']['analysis_sessions']['Row'];
@@ -46,7 +45,6 @@ export class WebsiteService {
   // Website management
   static async createWebsite(data: CreateWebsiteData): Promise<Website> {
     const { data: { user } } = await supabase.auth.getUser();
-    const demoSessionId = !user ? DemoSessionService.getDemoSessionId() : undefined;
     
     const { data: website, error } = await supabase
       .from('websites')
@@ -56,8 +54,7 @@ export class WebsiteService {
         title: data.title,
         description: data.description,
         industry: data.industry,
-        user_id: user?.id || null,
-        demo_session_id: demoSessionId
+        user_id: user?.id || null
       }])
       .select()
       .single();
@@ -111,16 +108,6 @@ export class WebsiteService {
   // Analysis session management
   static async createAnalysisSession(data: CreateAnalysisSessionData): Promise<AnalysisSession> {
     const { data: { user } } = await supabase.auth.getUser();
-    const demoSessionId = !user ? DemoSessionService.getDemoSessionId() : undefined;
-
-    // Check demo session limits if this is a demo session
-    if (!user && demoSessionId) {
-      const { canProceed } = await DemoSessionService.checkSessionLimits(demoSessionId);
-      
-      if (!canProceed) {
-        throw new Error('Demo session limit reached. Please request a demo to continue with unlimited analysis.');
-      }
-    }
 
     const { data: session, error } = await supabase
       .from('analysis_sessions')
@@ -128,8 +115,7 @@ export class WebsiteService {
         website_id: data.website_id,
         current_page: data.current_page,
         session_data: data.session_data || {},
-        user_id: user?.id || null,
-        demo_session_id: demoSessionId
+        user_id: user?.id || null
       }])
       .select()
       .single();
@@ -164,7 +150,6 @@ export class WebsiteService {
   // Conversation message management
   static async saveMessage(data: CreateMessageData): Promise<ConversationMessage> {
     const { data: { user } } = await supabase.auth.getUser();
-    const demoSessionId = !user ? DemoSessionService.getDemoSessionId() : undefined;
 
     const { data: message, error } = await supabase
       .from('conversation_messages')
@@ -174,8 +159,7 @@ export class WebsiteService {
         content: data.content,
         suggestions: data.suggestions || [],
         metadata: data.metadata || {},
-        user_id: user?.id || null,
-        demo_session_id: demoSessionId
+        user_id: user?.id || null
       }])
       .select()
       .single();
@@ -198,7 +182,6 @@ export class WebsiteService {
   // Analysis report management
   static async createAnalysisReport(data: CreateAnalysisReportData): Promise<AnalysisReport> {
     const { data: { user } } = await supabase.auth.getUser();
-    const demoSessionId = !user ? DemoSessionService.getDemoSessionId() : undefined;
 
     const { data: report, error } = await supabase
       .from('analysis_reports')
@@ -209,8 +192,7 @@ export class WebsiteService {
         recommendations: data.recommendations,
         metrics: data.metrics,
         export_data: data.export_data || {},
-        user_id: user?.id || null,
-        demo_session_id: demoSessionId
+        user_id: user?.id || null
       }])
       .select()
       .single();
