@@ -78,36 +78,36 @@ const Chat: React.FC<ChatProps> = () => {
   const getInitialSuggestions = useCallback((productType: string): string[] => {
     const suggestions: { [key: string]: string[] } = {
       'ecommerce': [
-        "Analyze this page's conversion potential",
-        "Review checkout flow optimization",
-        "Improve product page layout",
-        "Optimize mobile experience"
+        "What can I improve on this page to increase conversions?",
+        "How does this page compare to top ecommerce sites?",
+        "What are the biggest conversion barriers here?",
+        "How can I optimize this page for mobile users?"
       ],
       'saas': [
-        "Optimize signup conversion on this page",
-        "Analyze pricing page effectiveness",
-        "Improve onboarding flow",
-        "Review feature presentation"
+        "How can I improve the conversion rate on this page?",
+        "What do industry leaders do better on similar pages?",
+        "What elements should I A/B test here?",
+        "How can I reduce friction on this page?"
       ],
       'blog': [
-        "Increase engagement on this page",
-        "Optimize content for SEO",
-        "Improve newsletter signups",
-        "Analyze reader retention"
+        "How can I increase engagement on this content?",
+        "What's missing compared to top performing blogs?",
+        "How can I improve the user experience here?",
+        "What should I optimize for better SEO?"
       ],
       'portfolio': [
-        "Optimize contact conversion",
-        "Improve project showcase",
-        "Enhance page design",
-        "Analyze visitor engagement"
+        "How can I make this page more compelling?",
+        "What do successful portfolios do differently?",
+        "How can I improve trust signals here?",
+        "What would make visitors contact me from this page?"
       ]
     };
     
     return suggestions[productType] || [
-      "Analyze this page's performance",
-      "Improve conversion rates",
-      "Optimize page load speeds",
-      "Enhance user experience"
+      "What should I improve on this page?",
+      "How does this compare to competitors?",
+      "What are the biggest issues you see here?",
+      "How can I optimize this page for conversions?"
     ];
   }, []);
 
