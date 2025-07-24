@@ -24,7 +24,7 @@ const AddWebsite = () => {
       <main className="self-center flex w-full max-w-[800px] flex-col max-md:max-w-full px-8 py-16">
         <div className="text-center mb-12">
           <h1 className="text-[rgba(28,28,28,1)] text-2xl sm:text-3xl lg:text-4xl font-medium leading-tight tracking-[-0.8px] sm:tracking-[-1.2px] mb-4">
-            Add Your Website or SaaS Product
+            Start analyzing your Website
           </h1>
           <p className="text-[#1c1c1c] text-base sm:text-lg font-normal leading-relaxed">
             Enter the URL of your website or SaaS product to get started with analytics and insights
