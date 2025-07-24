@@ -58,12 +58,15 @@ serve(async (req) => {
     console.log('- Product Type:', productType)
     console.log('- User Question:', userQuestion)
     
-    // Scrape the actual page content using Firecrawl (use websiteUrl, not currentPage)
-    console.log(`Scraping page content for: ${websiteUrl}`)
-    const pageContent = await scrapePageContent(websiteUrl, firecrawlApiKey)
+    // Capture screenshot and scrape content in parallel
+    console.log(`Capturing screenshot and scraping content for: ${websiteUrl}`)
+    const [pageContent, screenshot] = await Promise.all([
+      scrapePageContent(websiteUrl, firecrawlApiKey),
+      captureScreenshot(websiteUrl)
+    ])
     
-    // Create enhanced system prompt with real page content
-    const systemPrompt = createSystemPrompt(websiteUrl, currentPage, productType, pageContent, industry, analysisType)
+    // Create enhanced system prompt with both text content and visual analysis
+    const systemPrompt = createSystemPrompt(websiteUrl, currentPage, productType, pageContent, screenshot, industry, analysisType)
 
     // Get conversation history if sessionId is provided
     let conversationContext = ''
@@ -88,13 +91,22 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o', // Use vision-capable model
         messages: [
           { role: 'system', content: systemPrompt + conversationContext },
-          { role: 'user', content: userQuestion }
+          { 
+            role: 'user', 
+            content: [
+              { type: 'text', text: userQuestion },
+              ...(screenshot ? [{ 
+                type: 'image_url', 
+                image_url: { url: screenshot, detail: 'high' }
+              }] : [])
+            ]
+          }
         ],
         temperature: 0.7,
-        max_tokens: 1500
+        max_tokens: 2000
       }),
     })
 
@@ -231,7 +243,39 @@ Despite the scraping issue, I can analyze this as a pricing page based on the UR
   }
 }
 
-function createSystemPrompt(websiteUrl: string, currentPage: string, productType: string, pageContent: string, industry?: string, analysisType?: string): string {
+async function captureScreenshot(url: string): Promise<string | null> {
+  try {
+    console.log(`Capturing screenshot for: ${url}`)
+    
+    // Use Puppeteer via external service or implement browser automation
+    const response = await fetch('https://api.microlink.io/screenshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: url,
+        type: 'png',
+        viewport: { width: 1200, height: 800 },
+        fullPage: false, // Capture above-the-fold area
+        device: 'desktop'
+      })
+    })
+
+    if (!response.ok) {
+      console.error('Screenshot capture failed:', response.status, response.statusText)
+      return null
+    }
+
+    const data = await response.json()
+    const screenshotBase64 = `data:image/png;base64,${data.data}`
+    console.log('Screenshot captured successfully')
+    return screenshotBase64
+  } catch (error) {
+    console.error('Error capturing screenshot:', error)
+    return null
+  }
+}
+
+function createSystemPrompt(websiteUrl: string, currentPage: string, productType: string, pageContent: string, screenshot: string | null, industry?: string, analysisType?: string): string {
   
   // Check if scraping failed and adjust prompt accordingly
   const scrapingFailed = pageContent.includes('SCRAPING_FAILED') || pageContent.includes('SCRAPING_ERROR') || pageContent.includes('CONTENT_EMPTY')
@@ -280,6 +324,33 @@ ${industry ? `Specific Industry: ${industry}` : ''}
 
 ACTUAL PAGE CONTENT:
 ${pageContent}
+
+VISUAL ANALYSIS INSTRUCTIONS:
+${screenshot ? 
+`I've provided a screenshot of the actual page. Analyze the VISUAL elements you can see:
+
+VISUAL HIERARCHY & LAYOUT:
+- Analyze button prominence, size, and color contrast
+- Evaluate visual flow and eye-tracking patterns  
+- Assess form placement and visual accessibility
+- Check mobile responsiveness indicators
+- Identify visual clutter or distractions
+
+TRUST & CONVERSION ELEMENTS:
+- Evaluate logo placement and brand credibility signals
+- Analyze testimonial presentation and visual impact
+- Assess security badges and trust indicator visibility
+- Check social proof presentation (reviews, customer logos)
+
+COMPETITIVE VISUAL BENCHMARKING:
+- Compare visual design patterns to industry leaders
+- Identify missing visual conversion elements
+- Assess color psychology and emotional triggers
+- Evaluate CTA button design vs best practices
+
+Provide specific visual observations like "The main CTA button is barely visible due to low contrast" or "The pricing table lacks visual hierarchy compared to [competitor]"` 
+: 
+'No screenshot available - base analysis on content structure and industry visual best practices.'}
 
 ANALYSIS FRAMEWORK - BE EXTREMELY SPECIFIC:
 
