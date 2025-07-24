@@ -176,237 +176,188 @@ const Chat: React.FC<ChatProps> = () => {
     setMessages(prev => [...prev, contextMessage]);
   };
 
-  // Advanced automatic navigation detection system
+  // Revolutionary navigation detection system
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
     let isMonitoring = true;
     let lastCheckedUrl = currentPageUrl;
+    let pollInterval: NodeJS.Timeout;
+    let performanceObserver: PerformanceObserver | null = null;
 
-    // Method 1: Navigation API (if supported)
-    const setupNavigationAPI = () => {
+    console.log('🚀 Starting navigation monitoring for:', currentPageUrl);
+
+    // Method 1: Ultra-aggressive polling with multiple approaches
+    const checkForNavigation = () => {
+      if (!isMonitoring) return;
+
       try {
-        if ('navigation' in window) {
-          const handleNavigate = (event: any) => {
-            const newUrl = event.destination?.url;
-            if (newUrl && newUrl !== lastCheckedUrl) {
-              lastCheckedUrl = newUrl;
-              navigateToPage(newUrl);
+        // Approach 1: Try to access iframe URL
+        const iframeWindow = iframe.contentWindow;
+        if (iframeWindow) {
+          try {
+            const currentUrl = iframeWindow.location.href;
+            console.log('🔍 Checking URL:', currentUrl);
+            if (currentUrl && currentUrl !== lastCheckedUrl) {
+              console.log('✅ Navigation detected!', currentUrl);
+              lastCheckedUrl = currentUrl;
+              navigateToPage(currentUrl);
+              return;
             }
-          };
-          
-          (window as any).navigation.addEventListener('navigate', handleNavigate);
-          return () => (window as any).navigation.removeEventListener('navigate', handleNavigate);
+          } catch (e) {
+            console.log('❌ Cross-origin restriction on URL access');
+          }
+
+          // Approach 2: Check document title
+          try {
+            const title = iframeWindow.document.title;
+            console.log('📄 Document title:', title);
+          } catch (e) {
+            console.log('❌ Cross-origin restriction on document access');
+          }
+
+          // Approach 3: Try to inject a script to get URL
+          try {
+            iframeWindow.postMessage({ type: 'GET_URL' }, '*');
+          } catch (e) {
+            console.log('❌ PostMessage failed');
+          }
         }
-      } catch (e) {
-        console.log('Navigation API not available');
+
+        // Approach 4: Check iframe src attribute
+        const iframeSrc = iframe.src;
+        if (iframeSrc && iframeSrc !== lastCheckedUrl) {
+          console.log('🔄 Iframe src changed:', iframeSrc);
+          lastCheckedUrl = iframeSrc;
+          navigateToPage(iframeSrc);
+          return;
+        }
+
+        // Approach 5: Monitor performance entries
+        if ('performance' in window && performance.getEntriesByType) {
+          const navigationEntries = performance.getEntriesByType('navigation');
+          const resourceEntries = performance.getEntriesByType('resource');
+          console.log('📊 Performance entries:', navigationEntries.length, resourceEntries.length);
+        }
+
+      } catch (error) {
+        console.error('Navigation check error:', error);
       }
-      return null;
     };
 
-    // Method 2: History monitoring
-    const setupHistoryMonitoring = () => {
-      const originalPushState = history.pushState;
-      const originalReplaceState = history.replaceState;
+    // Method 2: Performance Observer for navigation events
+    if ('PerformanceObserver' in window) {
+      try {
+        performanceObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          entries.forEach((entry) => {
+            if (entry.entryType === 'navigation') {
+              console.log('🎯 Navigation performance entry detected:', entry);
+              setTimeout(checkForNavigation, 100);
+            }
+          });
+        });
+        performanceObserver.observe({ entryTypes: ['navigation', 'resource'] });
+      } catch (e) {
+        console.log('Performance Observer not available');
+      }
+    }
 
-      const checkForNavigationHistory = () => {
-        try {
-          const newUrl = iframe.contentWindow?.location.href;
-          if (newUrl && newUrl !== lastCheckedUrl) {
-            lastCheckedUrl = newUrl;
-            navigateToPage(newUrl);
-          }
-        } catch (e) {
-          // Cross-origin restriction
+    // Method 3: Message listener for iframe communication
+    const handleMessage = (event: MessageEvent) => {
+      console.log('📨 Received message:', event.data);
+      if (event.data?.type === 'URL_CHANGED' && event.data?.url) {
+        const newUrl = event.data.url;
+        if (newUrl !== lastCheckedUrl) {
+          console.log('🎉 URL change detected via message:', newUrl);
+          lastCheckedUrl = newUrl;
+          navigateToPage(newUrl);
         }
-      };
-
-      history.pushState = function(...args) {
-        originalPushState.apply(history, args);
-        setTimeout(() => checkForNavigationHistory(), 100);
-      };
-
-      history.replaceState = function(...args) {
-        originalReplaceState.apply(history, args);
-        setTimeout(() => checkForNavigationHistory(), 100);
-      };
-
-      window.addEventListener('popstate', () => {
-        setTimeout(() => checkForNavigationHistory(), 100);
-      });
-
-      return () => {
-        history.pushState = originalPushState;
-        history.replaceState = originalReplaceState;
-        window.removeEventListener('popstate', checkForNavigationHistory);
-      };
+      }
     };
 
-    // Method 3: Aggressive polling with performance optimization
-    const setupSmartPolling = () => {
-      let pollInterval: NodeJS.Timeout;
-      let isUserActive = false;
-      let consecutiveFailures = 0;
-      const maxFailures = 10;
+    window.addEventListener('message', handleMessage);
 
-      const checkForNavigation = () => {
-        if (!isMonitoring || consecutiveFailures >= maxFailures) return;
-
-        try {
-          // Try multiple approaches to detect navigation
-          const iframeWindow = iframe.contentWindow;
-          if (iframeWindow) {
-            // Approach 1: Direct URL access
-            try {
-              const currentUrl = iframeWindow.location.href;
-              if (currentUrl && currentUrl !== lastCheckedUrl) {
-                lastCheckedUrl = currentUrl;
-                navigateToPage(currentUrl);
-                consecutiveFailures = 0;
-                return;
-              }
-            } catch (e) {
-              // Cross-origin restriction
-            }
-
-            // Approach 2: Document title monitoring
-            try {
-              const title = iframeWindow.document.title;
-              const currentUrl = iframeWindow.location.href;
-              if (currentUrl !== lastCheckedUrl) {
-                lastCheckedUrl = currentUrl;
-                navigateToPage(currentUrl);
-                consecutiveFailures = 0;
-                return;
-              }
-            } catch (e) {
-              // Still cross-origin
-            }
-
-            // Approach 3: PostMessage to iframe (if it supports it)
-            try {
-              iframeWindow.postMessage({ type: 'REQUEST_URL' }, '*');
-            } catch (e) {
-              // Failed to post message
-            }
-          }
-          
-          consecutiveFailures++;
-        } catch (e) {
-          consecutiveFailures++;
-        }
-      };
-
-      const startPolling = (interval: number) => {
-        clearInterval(pollInterval);
-        pollInterval = setInterval(checkForNavigation, interval);
-      };
-
-      // Activity detection
-      const handleActivity = () => {
-        isUserActive = true;
-        startPolling(100); // Very aggressive when active
-        clearTimeout(activityTimeout);
-        activityTimeout = setTimeout(() => {
-          isUserActive = false;
-          startPolling(1000); // Slower when inactive
-        }, 2000);
-      };
-
-      let activityTimeout: NodeJS.Timeout;
-
-      // Event listeners for activity
-      iframe.addEventListener('mouseenter', handleActivity);
-      iframe.addEventListener('click', handleActivity);
-      iframe.addEventListener('focus', handleActivity);
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) handleActivity();
-      });
-
-      // Start with moderate polling
-      startPolling(500);
-
-      return () => {
-        clearInterval(pollInterval);
-        clearTimeout(activityTimeout);
-        iframe.removeEventListener('mouseenter', handleActivity);
-        iframe.removeEventListener('click', handleActivity);
-        iframe.removeEventListener('focus', handleActivity);
-      };
-    };
-
-    // Method 4: MutationObserver for iframe changes
-    const setupMutationObserver = () => {
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes') {
-            const newSrc = iframe.src;
-            if (newSrc && newSrc !== lastCheckedUrl) {
-              lastCheckedUrl = newSrc;
-              navigateToPage(newSrc);
-            }
+    // Method 4: Intersection Observer to detect content changes
+    let intersectionObserver: IntersectionObserver | null = null;
+    try {
+      intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            console.log('👁️ Iframe visibility changed, checking navigation...');
+            setTimeout(checkForNavigation, 100);
           }
         });
       });
+      intersectionObserver.observe(iframe);
+    } catch (e) {
+      console.log('Intersection Observer failed');
+    }
 
-      observer.observe(iframe, {
-        attributes: true,
-        attributeFilter: ['src'],
-        subtree: false
-      });
-
-      return () => observer.disconnect();
+    // Method 5: Ultra-frequent polling
+    const startPolling = () => {
+      clearInterval(pollInterval);
+      pollInterval = setInterval(checkForNavigation, 50); // Check every 50ms!
+      console.log('⚡ Started ultra-frequent polling');
     };
 
-    // Method 5: PostMessage listener for iframe communication
-    const setupPostMessageListener = () => {
-      const handleMessage = (event: MessageEvent) => {
-        if (event.data?.type === 'URL_CHANGED' && event.data?.url) {
-          const newUrl = event.data.url;
-          if (newUrl !== lastCheckedUrl) {
-            lastCheckedUrl = newUrl;
-            navigateToPage(newUrl);
-          }
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      return () => window.removeEventListener('message', handleMessage);
+    // Method 6: Event listeners for all possible iframe interactions
+    const events = ['load', 'click', 'mousedown', 'mouseup', 'focus', 'blur', 'change'];
+    const handleAnyEvent = (eventType: string) => {
+      console.log(`🎪 Iframe event: ${eventType}`);
+      setTimeout(checkForNavigation, 50);
+      setTimeout(checkForNavigation, 200);
+      setTimeout(checkForNavigation, 500);
+      setTimeout(checkForNavigation, 1000);
     };
 
-    // Set up all monitoring methods
-    const cleanupFunctions = [
-      setupNavigationAPI(),
-      setupHistoryMonitoring(),
-      setupSmartPolling(),
-      setupMutationObserver(),
-      setupPostMessageListener()
-    ].filter(Boolean);
+    events.forEach(eventType => {
+      iframe.addEventListener(eventType, () => handleAnyEvent(eventType));
+    });
+
+    // Start monitoring
+    startPolling();
+    checkForNavigation(); // Initial check
 
     // Cleanup
     return () => {
+      console.log('🧹 Cleaning up navigation monitoring');
       isMonitoring = false;
-      cleanupFunctions.forEach(cleanup => cleanup && cleanup());
+      clearInterval(pollInterval);
+      window.removeEventListener('message', handleMessage);
+      if (performanceObserver) {
+        performanceObserver.disconnect();
+      }
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
+      }
+      events.forEach(eventType => {
+        iframe.removeEventListener(eventType, () => handleAnyEvent(eventType));
+      });
     };
   }, [currentPageUrl, setSearchParams, navigateToPage]);
 
-  // Enhanced iframe load handler
+  // Enhanced iframe load handler with debugging
   const handleIframeLoad = () => {
+    console.log('🔄 Iframe loaded');
     setTimeout(() => {
       const iframe = iframeRef.current;
       if (!iframe) return;
 
       try {
         const newUrl = iframe.contentWindow?.location.href;
+        console.log('🔍 Load check - URL:', newUrl);
         if (newUrl && newUrl !== currentPageUrl) {
+          console.log('✅ Navigation detected on load:', newUrl);
           navigateToPage(newUrl);
         }
       } catch (e) {
-        // Add navigation hint for cross-origin
+        console.log('❌ Cross-origin restriction on load check');
+        // Add a more aggressive detection message
         const hintMessage: Message = {
           id: Date.now().toString(),
-          content: `🔄 **Page loaded** - Navigation detection is active. Continue browsing and I'll try to track changes automatically.`,
+          content: `🔄 **Page loaded** - If you've navigated to a new page, the URL change should be detected automatically. If not, please let me know what page you're on and I'll track it manually.`,
           sender: 'ai',
           timestamp: new Date()
         };
@@ -417,6 +368,36 @@ const Chat: React.FC<ChatProps> = () => {
         });
       }
     }, 200);
+  };
+
+  // Add a manual detection button for emergencies
+  const forceNavigationCheck = () => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    console.log('🚨 Force checking navigation...');
+    
+    // Try every possible method
+    try {
+      const url = iframe.contentWindow?.location.href;
+      if (url) {
+        console.log('🎯 Force check found URL:', url);
+        navigateToPage(url);
+        return;
+      }
+    } catch (e) {
+      console.log('Force check failed, showing prompt');
+    }
+
+    // If all else fails, ask user
+    const promptMessage: Message = {
+      id: Date.now().toString(),
+      content: `🔍 **Manual detection needed** - What page are you currently viewing? (e.g., "pricing", "about", "contact", etc.) I'll track it for you.`,
+      sender: 'ai',
+      timestamp: new Date(),
+      suggestions: ['Pricing page', 'About page', 'Contact page', 'Features page', 'Blog page']
+    };
+    setMessages(prev => [...prev, promptMessage]);
   };
 
   const scrollToBottom = () => {
@@ -679,17 +660,43 @@ const Chat: React.FC<ChatProps> = () => {
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups allow-pointer-lock"
-                    allow="clipboard-read; clipboard-write"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups allow-pointer-lock allow-modals"
+                    allow="clipboard-read; clipboard-write; fullscreen; geolocation"
                     onLoad={handleIframeLoad}
                   />
                 </div>
                 
-                {/* Status indicator */}
-                <div className="mt-2 text-center">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    Navigation tracking active
+                {/* Debug and Status Section */}
+                <div className="mt-2 space-y-2">
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      Ultra-aggressive navigation tracking active (50ms polling)
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center gap-2">
+                    <button
+                      onClick={forceNavigationCheck}
+                      className="px-3 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 transition-colors"
+                    >
+                      🚨 Force Check Navigation
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('Current state:', { currentPageUrl, currentPageName });
+                        const iframe = iframeRef.current;
+                        try {
+                          console.log('Iframe src:', iframe?.src);
+                          console.log('Iframe contentWindow:', iframe?.contentWindow?.location.href);
+                        } catch (e) {
+                          console.log('Cross-origin restriction confirmed');
+                        }
+                      }}
+                      className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
+                    >
+                      🔍 Debug Info
+                    </button>
                   </div>
                 </div>
               </div>
