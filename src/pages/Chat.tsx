@@ -140,21 +140,68 @@ const Chat: React.FC<ChatProps> = () => {
       <Header />
       
       <div className="flex flex-1 overflow-hidden">
-        {/* Chat Sidebar */}
-        <div className="w-full lg:w-1/2 xl:w-2/5 border-r border-[rgba(28,28,28,0.1)] flex flex-col">
-          {/* Website Info Header */}
-          {websiteData && (
-            <div className="bg-white border-b border-[rgba(28,28,28,0.1)] p-3 mb-2">
-              <div className="flex items-center gap-2 text-sm">
-                <ExternalLink className="w-4 h-4 text-[rgba(95,95,93,1)]" />
-                <span className="text-[rgba(28,28,28,1)] font-medium">{websiteData.websiteUrl}</span>
-                <span className="bg-[rgba(247,244,237,1)] text-[rgba(95,95,93,1)] px-2 py-1 rounded text-xs">
-                  {websiteData.productType}
-                </span>
+        {/* Left Panel - Website Preview */}
+        <div className="hidden lg:flex flex-1 bg-[rgba(252,251,248,1)] flex-col">
+          {websiteData ? (
+            <div className="flex flex-col h-full">
+              {/* Website Info Header */}
+              <div className="bg-white border-b border-[rgba(28,28,28,0.1)] p-4">
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4 text-[rgba(95,95,93,1)]" />
+                  <span className="text-[rgba(28,28,28,1)] font-medium">{websiteData.websiteUrl}</span>
+                  <span className="bg-[rgba(247,244,237,1)] text-[rgba(95,95,93,1)] px-2 py-1 rounded text-xs">
+                    {websiteData.productType}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Website Preview */}
+              <div className="flex-1 p-4">
+                <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden">
+                  <iframe
+                    src={websiteData.websiteUrl}
+                    className="w-full h-full"
+                    title="Website Preview"
+                    sandbox="allow-same-origin allow-scripts allow-forms"
+                  />
+                </div>
+              </div>
+              
+              {/* Quick Analysis Panel */}
+              <div className="bg-white border-t border-[rgba(28,28,28,0.1)] p-4 max-h-48 overflow-y-auto">
+                <h3 className="text-[rgba(28,28,28,1)] text-sm font-medium mb-2 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Key Focus Areas
+                </h3>
+                <div className="space-y-1">
+                  {getInitialSuggestions(websiteData.productType).slice(0, 3).map((area, index) => (
+                    <div key={index} className="flex items-center gap-2 text-xs text-[rgba(95,95,93,1)]">
+                      <div className="w-1.5 h-1.5 bg-[rgba(28,28,28,1)] rounded-full"></div>
+                      {area}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full p-8">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 bg-[rgba(247,244,237,1)] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ExternalLink className="w-8 h-8 text-[rgba(28,28,28,1)]" />
+                </div>
+                <h3 className="text-[rgba(28,28,28,1)] text-lg font-medium mb-2">
+                  Website Preview
+                </h3>
+                <p className="text-[rgba(95,95,93,1)] text-sm leading-relaxed">
+                  Your website preview will appear here once you add a website URL.
+                </p>
               </div>
             </div>
           )}
+        </div>
 
+        {/* Right Panel - Chat Interface */}
+        <div className="w-full lg:w-1/2 xl:w-2/5 border-l border-[rgba(28,28,28,0.1)] flex flex-col bg-white">
           {/* Chat Header */}
           <div className="border-b border-[rgba(28,28,28,0.1)] p-4 bg-[rgba(247,244,237,1)]">
             <h2 className="text-[rgba(28,28,28,1)] text-lg font-medium">
@@ -273,72 +320,6 @@ const Chat: React.FC<ChatProps> = () => {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Right Panel - Website Analysis */}
-        <div className="hidden lg:flex flex-1 bg-[rgba(252,251,248,1)] flex-col p-6">
-          {websiteData ? (
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg p-4 border border-[rgba(28,28,28,0.1)]">
-                <h3 className="text-[rgba(28,28,28,1)] text-lg font-medium mb-3 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  Website Overview
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(95,95,93,1)] text-sm">URL:</span>
-                    <span className="text-[rgba(28,28,28,1)] text-sm font-medium">{websiteData.websiteUrl}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[rgba(95,95,93,1)] text-sm">Type:</span>
-                    <span className="text-[rgba(28,28,28,1)] text-sm font-medium capitalize">{websiteData.productType}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-4 border border-[rgba(28,28,28,0.1)]">
-                <h3 className="text-[rgba(28,28,28,1)] text-lg font-medium mb-3 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Key Focus Areas
-                </h3>
-                <div className="space-y-2">
-                  {getInitialSuggestions(websiteData.productType).map((area, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm text-[rgba(28,28,28,1)]">
-                      <div className="w-2 h-2 bg-[rgba(28,28,28,1)] rounded-full"></div>
-                      {area}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {websiteData.productType === 'ecommerce' && (
-                <div className="bg-white rounded-lg p-4 border border-[rgba(28,28,28,0.1)]">
-                  <h3 className="text-[rgba(28,28,28,1)] text-lg font-medium mb-3 flex items-center gap-2">
-                    <ShoppingCart className="w-5 h-5" />
-                    E-commerce Metrics
-                  </h3>
-                  <div className="space-y-2 text-sm text-[rgba(95,95,93,1)]">
-                    <p>• Cart abandonment rate</p>
-                    <p>• Product page conversions</p>
-                    <p>• Average order value</p>
-                    <p>• Customer lifetime value</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center max-w-md mx-auto">
-              <div className="w-16 h-16 bg-[rgba(247,244,237,1)] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bot className="w-8 h-8 text-[rgba(28,28,28,1)]" />
-              </div>
-              <h3 className="text-[rgba(28,28,28,1)] text-xl font-medium mb-2">
-                AI-Powered Insights
-              </h3>
-              <p className="text-[rgba(95,95,93,1)] text-sm leading-relaxed">
-                Chat with our AI assistant to get personalized recommendations for improving your website's performance, user experience, and conversion rates.
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
