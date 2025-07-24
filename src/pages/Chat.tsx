@@ -324,12 +324,12 @@ const Chat: React.FC<ChatProps> = () => {
   };
 
   return (
-    <div className="bg-gray-900 flex flex-col h-screen text-white">
+    <div className="bg-neutral-900 flex flex-col h-screen text-white">
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Chat Interface (30% width, Lovable-style) */}
-        <div className="w-full md:w-[30%] flex flex-col bg-gray-900 border-r border-gray-700">
+        <div className="w-full md:w-[30%] flex flex-col bg-neutral-900 border-r border-neutral-700">
           {/* Chat Header - Lovable Style */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div className="flex items-center justify-between p-4 border-b border-neutral-700">
             <div className="flex items-center gap-2">
               <Link className="w-5 h-5 text-gray-400" />
               <h1 className="text-gray-200 text-lg font-medium">{websiteData ? new URL(websiteData.websiteUrl).hostname : 'No website'}</h1>
@@ -337,7 +337,7 @@ const Chat: React.FC<ChatProps> = () => {
             <div className="flex items-center gap-2 relative">
               <button 
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="p-2 hover:bg-gray-800 rounded-lg"
+                className="p-2 hover:bg-neutral-800 rounded-lg"
               >
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -345,7 +345,7 @@ const Chat: React.FC<ChatProps> = () => {
               </button>
               
               {showDropdown && (
-                <div className="absolute top-full right-0 mt-1 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+                <div className="absolute top-full right-0 mt-1 w-48 bg-neutral-800 border border-neutral-600 rounded-lg shadow-lg z-50">
                   <ul className="py-2">
                     <li>
                       <button
@@ -353,7 +353,7 @@ const Chat: React.FC<ChatProps> = () => {
                           setShowDropdown(false);
                           navigate('/add-website');
                         }}
-                        className="w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700 transition-colors"
+                        className="w-full text-left px-4 py-2 text-gray-200 hover:bg-neutral-700 transition-colors"
                       >
                         Change Website
                       </button>
@@ -390,7 +390,7 @@ const Chat: React.FC<ChatProps> = () => {
                       <button
                         key={index}
                         onClick={() => setInputMessage(suggestion)}
-                        className="bg-gray-800 border border-gray-600 text-gray-200 text-xs px-3 py-1.5 rounded-full hover:bg-gray-700 transition-colors"
+                        className="bg-neutral-800 border border-neutral-600 text-gray-200 text-xs px-3 py-1.5 rounded-full hover:bg-neutral-700 transition-colors"
                       >
                         {suggestion}
                       </button>
@@ -411,7 +411,7 @@ const Chat: React.FC<ChatProps> = () => {
                   <span>Thought for a few seconds</span>
                 </div>
                 
-                <div className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 max-w-fit">
+                <div className="bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 max-w-fit">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -424,14 +424,14 @@ const Chat: React.FC<ChatProps> = () => {
           </div>
 
           {/* Input Area - Lovable Style */}
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-4 border-t border-neutral-700">
             <form onSubmit={handleSendMessage} className="relative">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Ask Jackie..."
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-neutral-800 border border-neutral-600 rounded-lg px-4 py-3 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isLoading}
               />
               <button
@@ -447,16 +447,16 @@ const Chat: React.FC<ChatProps> = () => {
         </div>
 
         {/* Right Panel - Website Preview (70% width) */}
-        <div className="flex flex-1 bg-gray-900 flex-col">
+        <div className="flex flex-1 bg-neutral-900 flex-col">
           {websiteData ? (
             <div className="flex flex-col h-full">
               {/* Website Controls */}
-              <div className="bg-gray-800 border-b border-gray-700 p-3">
+              <div className="bg-neutral-800 border-b border-neutral-700 p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-gray-500" />
                     <span className="text-sm font-medium text-gray-200">{currentPageName}</span>
-                    <span className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
+                    <span className="bg-neutral-700 text-gray-300 px-2 py-1 rounded text-xs">
                       {websiteData.productType}
                     </span>
                   </div>
@@ -464,21 +464,21 @@ const Chat: React.FC<ChatProps> = () => {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => iframeRef.current?.contentWindow?.history.back()}
-                      className="p-1 hover:bg-gray-700 rounded"
+                      className="p-1 hover:bg-neutral-700 rounded"
                       title="Go Back"
                     >
                       <ArrowLeft className="w-4 h-4 text-gray-400" />
                     </button>
                     <button 
                       onClick={() => iframeRef.current?.contentWindow?.history.forward()}
-                      className="p-1 hover:bg-gray-700 rounded"
+                      className="p-1 hover:bg-neutral-700 rounded"
                       title="Go Forward"
                     >
                       <ArrowRight className="w-4 h-4 text-gray-400" />
                     </button>
                     <button 
                       onClick={() => iframeRef.current?.contentWindow?.location.reload()}
-                      className="p-1 hover:bg-gray-700 rounded"
+                      className="p-1 hover:bg-neutral-700 rounded"
                       title="Reload"
                     >
                       <RotateCcw className="w-4 h-4 text-gray-400" />
@@ -497,7 +497,7 @@ const Chat: React.FC<ChatProps> = () => {
                         navigateToPage(currentPageUrl);
                       }
                     }}
-                    className="flex-1 text-xs bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="flex-1 text-xs bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Enter page URL..."
                   />
                   <button
@@ -511,7 +511,7 @@ const Chat: React.FC<ChatProps> = () => {
               
               {/* Website Preview */}
               <div className="flex-1 p-4">
-                <div className="w-full h-full bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="w-full h-full bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden">
                   <iframe
                     ref={iframeRef}
                     src={currentPageUrl}
@@ -528,13 +528,13 @@ const Chat: React.FC<ChatProps> = () => {
           ) : (
             <div className="flex items-center justify-center h-full p-8">
               <div className="text-center max-w-md">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   <ExternalLink className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-gray-900 text-lg font-medium mb-2">
+                <h3 className="text-gray-200 text-lg font-medium mb-2">
                   Website Preview
                 </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
+                <p className="text-gray-400 text-sm leading-relaxed">
                   Add your website URL to start getting AI-powered insights and recommendations.
                 </p>
               </div>
