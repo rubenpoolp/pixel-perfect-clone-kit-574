@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link } from 'lucide-react';
@@ -22,6 +22,12 @@ interface ChatProps {
   productType?: string;
 }
 
+let messageIdCounter = 1;
+
+const generateUniqueId = (prefix: string): string => {
+  return `${prefix}-${Date.now()}-${messageIdCounter++}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
 const Chat: React.FC<ChatProps> = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,54 +41,7 @@ const Chat: React.FC<ChatProps> = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  useEffect(() => {
-    // Get website data from localStorage
-    const storedData = localStorage.getItem('websiteData');
-    if (storedData) {
-      const data: WebsiteData = JSON.parse(storedData);
-      setWebsiteData(data);
-      
-      // Check if there's a page parameter in URL
-      const pageParam = searchParams.get('page');
-      let initialUrl = data.websiteUrl;
-      let initialPageName = 'Homepage';
-      
-      // If page param exists and is not about:blank, use it
-      if (pageParam && pageParam !== 'about:blank' && pageParam.startsWith('http')) {
-        initialUrl = decodeURIComponent(pageParam);
-        initialPageName = extractPageName(initialUrl);
-      }
-      
-      setCurrentPageUrl(initialUrl);
-      setCurrentPageName(initialPageName);
-      
-      // Update URL to match the current page
-      setSearchParams({ page: initialUrl });
-      
-      // Create personalized first message
-      const welcomeMessage: Message = {
-        id: '1',
-        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n⚠️ **IMPORTANT**: Most websites block automatic URL tracking for security. **When you navigate to different pages, please copy the new URL and paste it in the yellow URL bar above to get page-specific insights!**\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`,
-        sender: 'ai',
-        timestamp: new Date(),
-        suggestions: getInitialSuggestions(data.productType),
-        pageContext: initialPageName
-      };
-      setMessages([welcomeMessage]);
-    } else {
-      // No website data found, redirect to add website page
-      const errorMessage: Message = {
-        id: '1',
-        content: `⚠️ **No website data found!** Please add your website first to start getting insights.`,
-        sender: 'ai',
-        timestamp: new Date(),
-        suggestions: ['Add my website', 'Go back to setup']
-      };
-      setMessages([errorMessage]);
-    }
-  }, [searchParams, setSearchParams]);
-
-  const extractPageName = (url: string): string => {
+  const extractPageName = useCallback((url: string): string => {
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname;
@@ -91,7 +50,6 @@ const Chat: React.FC<ChatProps> = () => {
       if (segments.length === 0) return 'Homepage';
       
       const lastSegment = segments[segments.length - 1];
-      // Convert common page patterns to readable names
       const pageNames: { [key: string]: string } = {
         'pricing': 'Pricing',
         'about': 'About',
@@ -112,9 +70,9 @@ const Chat: React.FC<ChatProps> = () => {
     } catch {
       return 'Homepage';
     }
-  };
+  }, []);
 
-  const getInitialSuggestions = (productType: string): string[] => {
+  const getInitialSuggestions = useCallback((productType: string): string[] => {
     const suggestions: { [key: string]: string[] } = {
       'ecommerce': [
         "Analyze this page's conversion potential",
@@ -148,113 +106,111 @@ const Chat: React.FC<ChatProps> = () => {
       "Optimize page load speeds",
       "Enhance user experience"
     ];
-  };
+  }, []);
 
-  const getPageSpecificContext = (pageName: string, productType: string): string => {
-    const contexts: { [key: string]: { [key: string]: string } } = {
-      'ecommerce': {
-        'Homepage': 'homepage conversion, hero section effectiveness, navigation clarity',
-        'Product': 'product presentation, add-to-cart optimization, review display',
-        'Pricing': 'pricing strategy, plan comparison, checkout flow',
-        'Cart': 'cart abandonment, checkout process, payment options',
-        'About': 'trust building, brand story, customer testimonials'
-      },
-      'saas': {
-        'Homepage': 'value proposition clarity, trial signup, feature highlights',
-        'Pricing': 'plan comparison, trial-to-paid conversion, pricing psychology',
-        'Features': 'feature presentation, benefit clarity, demo requests',
-        'About': 'team credibility, company story, customer success',
-        'Contact': 'lead generation, sales funnel, support accessibility'
-      },
-      'blog': {
-        'Homepage': 'content discovery, subscription conversion, navigation',
-        'Post': 'content engagement, related posts, sharing optimization',
-        'About': 'author credibility, newsletter signup, personal brand',
-        'Contact': 'reader engagement, collaboration opportunities'
-      }
+  const addMessage = useCallback((message: Omit<Message, 'id'>) => {
+    const newMessage: Message = {
+      ...message,
+      id: generateUniqueId(message.sender)
     };
-    
-    return contexts[productType]?.[pageName] || 'general page optimization, user experience, conversion elements';
-  };
+    setMessages(prev => [...prev, newMessage]);
+  }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Enhanced navigation tracking with better UX
   useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe || !websiteData) return;
-
-    let lastUrl = currentPageUrl;
-    
-    const checkNavigation = () => {
-      try {
-        const iframeUrl = iframe.contentWindow?.location.href;
-        if (iframeUrl && iframeUrl !== lastUrl && iframeUrl !== 'about:blank') {
-          console.log('🚀 Navigation detected:', iframeUrl);
-          lastUrl = iframeUrl;
-          const newPageName = extractPageName(iframeUrl);
-          
-          setCurrentPageUrl(iframeUrl);
-          setCurrentPageName(newPageName);
-          setSearchParams({ page: iframeUrl });
-          
-          const navMessage: Message = {
-            id: `nav-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            content: `🎯 **Auto-detected navigation to: ${newPageName}**\n\nURL: ${iframeUrl}\n\nReady for page-specific insights!`,
-            sender: 'ai',
-            timestamp: new Date(),
-            pageContext: newPageName,
-            suggestions: getInitialSuggestions(websiteData.productType)
-          };
-          setMessages(prev => [...prev, navMessage]);
-        }
-      } catch (error) {
-        // Show helpful message about manual URL updating
-        if (lastUrl === currentPageUrl) {
-          const helpMessage: Message = {
-            id: `help-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            content: `⚠️ **Auto-navigation blocked by website security**\n\n📝 **Please manually update the URL above when you navigate to get page-specific insights!**\n\n💡 **Tip**: Copy the current page URL from your browser and paste it in the URL bar above.`,
-            sender: 'ai',
-            timestamp: new Date(),
-            pageContext: currentPageName
-          };
-          setMessages(prev => [...prev, helpMessage]);
-        }
+    // Get website data from localStorage
+    const storedData = localStorage.getItem('websiteData');
+    if (storedData) {
+      const data: WebsiteData = JSON.parse(storedData);
+      setWebsiteData(data);
+      
+      // Check if there's a page parameter in URL
+      const pageParam = searchParams.get('page');
+      let initialUrl = data.websiteUrl;
+      let initialPageName = 'Homepage';
+      
+      // If page param exists and is not about:blank, use it
+      if (pageParam && pageParam !== 'about:blank' && pageParam.startsWith('http')) {
+        initialUrl = decodeURIComponent(pageParam);
+        initialPageName = extractPageName(initialUrl);
       }
-    };
+      
+      setCurrentPageUrl(initialUrl);
+      setCurrentPageName(initialPageName);
+      
+      // Update URL to match the current page
+      setSearchParams({ page: initialUrl });
+      
+      // Create personalized first message
+      addMessage({
+        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\n⚠️ **IMPORTANT**: Most websites block automatic URL tracking for security. **When you navigate to different pages, please copy the new URL and paste it in the yellow URL bar above to get page-specific insights!**\n\n💡 **How to use**:\n1. Navigate normally through your website\n2. Copy the current page URL from your browser\n3. Paste it in the URL bar above and click UPDATE\n4. Get AI insights for that specific page!`,
+        sender: 'ai',
+        timestamp: new Date(),
+        suggestions: getInitialSuggestions(data.productType),
+        pageContext: initialPageName
+      });
+    } else {
+      // No website data found, redirect to add website page
+      addMessage({
+        content: `⚠️ **No website data found!** Please add your website first to start getting insights.`,
+        sender: 'ai',
+        timestamp: new Date(),
+        suggestions: ['Add my website', 'Go back to setup']
+      });
+    }
+  }, [searchParams, setSearchParams, extractPageName, getInitialSuggestions, addMessage]);
 
-    const interval = setInterval(checkNavigation, 2000);
-    iframe.addEventListener('load', () => setTimeout(checkNavigation, 500));
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [websiteData, currentPageUrl, setSearchParams, getInitialSuggestions]);
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
-    const userMessage: Message = {
-      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    addMessage({
       content: inputMessage,
       sender: 'user',
       timestamp: new Date(),
       pageContext: currentPageName
-    };
+    });
 
-    setMessages(prev => [...prev, userMessage]);
+    const messageToProcess = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
     // Simulate AI response with page-specific insights
     setTimeout(() => {
+      const getPageSpecificContext = (pageName: string, productType: string): string => {
+        const contexts: { [key: string]: { [key: string]: string } } = {
+          'ecommerce': {
+            'Homepage': 'homepage conversion, hero section effectiveness, navigation clarity',
+            'Product': 'product presentation, add-to-cart optimization, review display',
+            'Pricing': 'pricing strategy, plan comparison, checkout flow',
+            'Cart': 'cart abandonment, checkout process, payment options',
+            'About': 'trust building, brand story, customer testimonials'
+          },
+          'saas': {
+            'Homepage': 'value proposition clarity, trial signup, feature highlights',
+            'Pricing': 'plan comparison, trial-to-paid conversion, pricing psychology',
+            'Features': 'feature presentation, benefit clarity, demo requests',
+            'About': 'team credibility, company story, customer success',
+            'Contact': 'lead generation, sales funnel, support accessibility'
+          },
+          'blog': {
+            'Homepage': 'content discovery, subscription conversion, navigation',
+            'Post': 'content engagement, related posts, sharing optimization',
+            'About': 'author credibility, newsletter signup, personal brand',
+            'Contact': 'reader engagement, collaboration opportunities'
+          }
+        };
+        
+        return contexts[productType]?.[pageName] || 'general page optimization, user experience, conversion elements';
+      };
+
       const pageContext = getPageSpecificContext(currentPageName, websiteData?.productType || '');
       let aiResponse = `Looking at your **${currentPageName}** page, I can help you improve ${pageContext}.\n\n`;
       
@@ -270,19 +226,17 @@ const Chat: React.FC<ChatProps> = () => {
         }
       }
       
-      const aiMessage: Message = {
-        id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      addMessage({
         content: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
         pageContext: currentPageName
-      };
-      setMessages(prev => [...prev, aiMessage]);
+      });
       setIsLoading(false);
     }, 1500);
-  };
+  }, [inputMessage, currentPageName, websiteData, addMessage]);
 
-  const navigateToPage = (url: string) => {
+  const navigateToPage = useCallback((url: string) => {
     setCurrentPageUrl(url);
     const pageName = extractPageName(url);
     setCurrentPageName(pageName);
@@ -291,15 +245,13 @@ const Chat: React.FC<ChatProps> = () => {
     setSearchParams({ page: url });
     
     // Add context message
-    const contextMessage: Message = {
-      id: `context-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    addMessage({
       content: `📍 Navigated to **${pageName}** page. I'm now analyzing this specific page and can provide targeted insights for optimization.`,
       sender: 'ai',
       timestamp: new Date(),
       pageContext: pageName
-    };
-    setMessages(prev => [...prev, contextMessage]);
-  };
+    });
+  }, [extractPageName, setSearchParams, addMessage]);
 
   return (
     <div className="bg-neutral-900 flex flex-col h-screen text-white">
@@ -366,7 +318,7 @@ const Chat: React.FC<ChatProps> = () => {
                   <div className="flex flex-wrap gap-2 mt-3">
                     {message.suggestions.map((suggestion, index) => (
                       <button
-                        key={index}
+                        key={`${message.id}-suggestion-${index}`}
                         onClick={() => setInputMessage(suggestion)}
                         className="bg-neutral-800 border border-neutral-600 text-gray-200 text-xs px-3 py-1.5 rounded-full hover:bg-neutral-700 transition-colors"
                       >
@@ -420,7 +372,6 @@ const Chat: React.FC<ChatProps> = () => {
                 <Send className="w-4 h-4" />
               </button>
             </form>
-
           </div>
         </div>
 
@@ -530,9 +481,6 @@ const Chat: React.FC<ChatProps> = () => {
                     className="w-full h-full"
                     title="Website Preview"
                     allow="navigation-top"
-                    onLoad={() => {
-                      console.log('Iframe onLoad triggered for:', currentPageUrl);
-                    }}
                   />
                 </div>
               </div>
