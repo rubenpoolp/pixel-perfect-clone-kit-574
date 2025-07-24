@@ -89,7 +89,19 @@ async function generateAIAnalysis({ websiteUrl, currentPage, productType, userQu
   }
 
   try {
-    // Extract page type from URL
+    console.log('Starting visual analysis for:', websiteUrl);
+    
+    // Take screenshot of the website
+    const screenshot = await takeScreenshot(websiteUrl);
+    
+    if (!screenshot) {
+      console.log('Screenshot failed, falling back to text analysis');
+      return generateFallbackAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType });
+    }
+
+    console.log('Screenshot captured, analyzing with vision model...');
+
+    // Extract page type from URL for context
     const url = new URL(websiteUrl);
     const path = url.pathname.toLowerCase();
     let detectedPageType = currentPage;
@@ -106,7 +118,7 @@ async function generateAIAnalysis({ websiteUrl, currentPage, productType, userQu
       detectedPageType = 'Contact';
     }
 
-    const prompt = `You are an expert conversion rate optimization consultant. Analyze the ${detectedPageType} page of a ${productType} website.
+    const prompt = `You are an expert UX/UI and conversion rate optimization consultant. I'm showing you a screenshot of a ${detectedPageType} page from a ${productType} website.
 
 Website: ${websiteUrl}
 Page Type: ${detectedPageType}
@@ -114,22 +126,22 @@ Product Type: ${productType}
 Industry: ${industry}
 User Question: ${userQuestion}
 
-Provide a detailed, actionable analysis focused on conversion optimization. Be specific and avoid generic advice. Consider:
+Please analyze this screenshot and provide specific, actionable insights about:
 
-1. Page-specific conversion goals for ${detectedPageType} pages
-2. ${productType} industry best practices
-3. User's specific question: "${userQuestion}"
-4. ${industry} industry context
+1. Visual hierarchy and layout issues
+2. Text readability and clarity 
+3. Call-to-action button placement and design
+4. Trust signals and social proof elements
+5. Navigation and user flow
+6. Mobile responsiveness concerns visible in the design
+7. Color scheme and visual appeal
+8. Specific elements that could be hindering conversions
 
-Format your response as follows:
-- Start with a brief overview of what you're analyzing
-- Provide 4-6 specific, actionable recommendations
-- Each recommendation should be concrete and implementable
-- Focus on high-impact optimizations
-- Avoid using asterisks (*) in your response
-- Be conversational but professional
+Focus on what you can actually SEE in the image. Point out specific UI elements, text, buttons, layouts, etc. that need improvement.
 
-Keep the response under 300 words and make every sentence valuable.`;
+Be very specific about what you observe and avoid generic advice. Mention specific colors, positions, text, etc. that you see.
+
+Keep response under 400 words and make every insight actionable.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -138,16 +150,22 @@ Keep the response under 300 words and make every sentence valuable.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o',
         messages: [
           { 
             role: 'system', 
-            content: 'You are a conversion optimization expert. Provide specific, actionable advice without using asterisks or generic suggestions. Focus on measurable improvements.' 
+            content: 'You are a UX/UI and conversion optimization expert. Analyze website screenshots and provide specific, actionable insights based on what you can visually observe. Focus on concrete UI elements, not generic advice.' 
           },
-          { role: 'user', content: prompt }
+          { 
+            role: 'user', 
+            content: [
+              { type: 'text', text: prompt },
+              { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshot}` } }
+            ]
+          }
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: 600,
+        temperature: 0.3,
       }),
     });
 
@@ -174,7 +192,8 @@ Keep the response under 300 words and make every sentence valuable.`;
         estimatedImpact: '25-40%',
         analysisType,
         industry,
-        pageType: detectedPageType
+        pageType: detectedPageType,
+        hasVisualAnalysis: true
       },
       analysisType,
       timestamp: new Date().toISOString()
@@ -183,6 +202,35 @@ Keep the response under 300 words and make every sentence valuable.`;
   } catch (error) {
     console.error('AI analysis error:', error);
     return generateFallbackAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType });
+  }
+}
+
+// Function to take screenshot using a screenshot service
+async function takeScreenshot(url: string): Promise<string | null> {
+  try {
+    console.log('Taking screenshot of:', url);
+    
+    // Using screenshotapi.net as a reliable screenshot service
+    const screenshotUrl = `https://screenshotapi.net/api/v1/screenshot?url=${encodeURIComponent(url)}&width=1280&height=720&output=base64`;
+    
+    const response = await fetch(screenshotUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+
+    if (!response.ok) {
+      console.error('Screenshot service error:', response.status, response.statusText);
+      return null;
+    }
+
+    const base64Data = await response.text();
+    console.log('Screenshot captured successfully');
+    return base64Data;
+
+  } catch (error) {
+    console.error('Screenshot error:', error);
+    return null;
   }
 }
 
