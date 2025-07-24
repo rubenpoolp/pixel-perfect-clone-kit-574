@@ -141,7 +141,7 @@ const Chat: React.FC<ChatProps> = () => {
       
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Website Preview */}
-        <div className="hidden lg:flex flex-1 bg-[rgba(252,251,248,1)] flex-col">
+        <div className="flex flex-1 bg-[rgba(252,251,248,1)] flex-col border-r border-[rgba(28,28,28,0.1)]">
           {websiteData ? (
             <div className="flex flex-col h-full">
               {/* Website Info Header */}
@@ -201,7 +201,7 @@ const Chat: React.FC<ChatProps> = () => {
         </div>
 
         {/* Right Panel - Chat Interface */}
-        <div className="w-full lg:w-1/2 xl:w-2/5 border-l border-[rgba(28,28,28,0.1)] flex flex-col bg-white">
+        <div className="w-full md:w-1/2 flex flex-col bg-white">
           {/* Chat Header */}
           <div className="border-b border-[rgba(28,28,28,0.1)] p-4 bg-[rgba(247,244,237,1)]">
             <h2 className="text-[rgba(28,28,28,1)] text-lg font-medium">
