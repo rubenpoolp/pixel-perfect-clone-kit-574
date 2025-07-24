@@ -269,13 +269,12 @@ const Chat: React.FC<ChatProps> = () => {
         {/* Left Panel - Chat Interface (30% width, dark mode) */}
         <div className="w-full md:w-[30%] flex flex-col bg-gray-900 border-r border-gray-700">
           {/* Chat Header */}
-          <div className="border-b border-gray-700 p-4 bg-gray-800">
-            <h2 className="text-white text-lg font-medium">
-              Website Optimization Assistant
-            </h2>
-            <p className="text-gray-300 text-sm mt-1">
-              Get personalized insights to improve your website
-            </p>
+          <div className="border-b border-gray-700 p-4 bg-gray-800 flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/c22e00c0-8844-4c75-9061-80d10b4cb779.png" 
+              alt="Jackie Logo" 
+              className="h-8 w-auto object-contain"
+            />
           </div>
 
           {/* Messages */}
@@ -435,12 +434,27 @@ const Chat: React.FC<ChatProps> = () => {
                     type="url"
                     value={currentPageUrl}
                     onChange={(e) => setCurrentPageUrl(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && navigateToPage(currentPageUrl)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        navigateToPage(currentPageUrl);
+                        // Update iframe src directly
+                        if (iframeRef.current) {
+                          iframeRef.current.src = currentPageUrl;
+                        }
+                      }
+                    }}
                     className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Enter page URL..."
                   />
                   <button
-                    onClick={() => navigateToPage(currentPageUrl)}
+                    onClick={() => {
+                      navigateToPage(currentPageUrl);
+                      // Update iframe src directly
+                      if (iframeRef.current) {
+                        iframeRef.current.src = currentPageUrl;
+                      }
+                    }}
                     className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
                     Go
@@ -456,7 +470,36 @@ const Chat: React.FC<ChatProps> = () => {
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-navigation"
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups"
+                    onLoad={() => {
+                      // Try to detect URL changes
+                      setTimeout(() => {
+                        try {
+                          const iframe = iframeRef.current;
+                          if (iframe?.contentWindow) {
+                            const newUrl = iframe.contentWindow.location.href;
+                            if (newUrl !== currentPageUrl) {
+                              const pageName = extractPageName(newUrl);
+                              setCurrentPageUrl(newUrl);
+                              setCurrentPageName(pageName);
+                              setSearchParams({ page: newUrl });
+                              
+                              const contextMessage: Message = {
+                                id: Date.now().toString(),
+                                content: `📍 Navigated to **${pageName}** page. I can now provide specific insights for this page.`,
+                                sender: 'ai',
+                                timestamp: new Date(),
+                                pageContext: pageName
+                              };
+                              setMessages(prev => [...prev, contextMessage]);
+                            }
+                          }
+                        } catch (error) {
+                          // Handle cross-origin restrictions
+                          console.log('Cross-origin navigation detected');
+                        }
+                      }, 100);
+                    }}
                   />
                 </div>
               </div>
