@@ -3,11 +3,22 @@ interface AnalysisRequest {
   currentPage: string;
   productType: string;
   userQuestion: string;
+  sessionId?: string;
+  industry?: string;
+  analysisType?: 'initial' | 'follow-up' | 'deep-dive';
 }
 
 interface AnalysisResponse {
   content: string;
   suggestions: string[];
+  metrics?: Record<string, any>;
+  recommendations?: Array<{
+    category: string;
+    recommendation: string;
+    priority: string;
+  }>;
+  analysisType?: string;
+  timestamp?: string;
 }
 
 export class AnalysisService {
@@ -15,27 +26,28 @@ export class AnalysisService {
 
   static async analyzeWebsite(request: AnalysisRequest): Promise<AnalysisResponse> {
     try {
-      const response = await fetch(this.FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
+      // Use Supabase functions for the analysis
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase.functions.invoke('analyze-website', {
+        body: JSON.stringify(request)
       });
 
-      if (!response.ok) {
-        throw new Error(`Analysis failed: ${response.statusText}`);
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
-      
       if (data.error) {
         throw new Error(data.error);
       }
 
       return {
         content: data.content,
-        suggestions: data.suggestions || []
+        suggestions: data.suggestions || [],
+        metrics: data.metrics,
+        recommendations: data.recommendations,
+        analysisType: data.analysisType,
+        timestamp: data.timestamp
       };
     } catch (error) {
       console.error('Analysis service error:', error);
