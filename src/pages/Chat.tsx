@@ -181,6 +181,55 @@ const Chat: React.FC<ChatProps> = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Enhanced iframe navigation detection
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !websiteData) return;
+
+    let lastUrl = currentPageUrl;
+    
+    const checkNavigation = () => {
+      try {
+        const iframeUrl = iframe.contentWindow?.location.href;
+        if (iframeUrl && iframeUrl !== lastUrl && iframeUrl !== 'about:blank') {
+          lastUrl = iframeUrl;
+          const newPageName = extractPageName(iframeUrl);
+          
+          setCurrentPageUrl(iframeUrl);
+          setCurrentPageName(newPageName);
+          setSearchParams({ page: iframeUrl });
+          
+          // Add navigation message
+          const navMessage: Message = {
+            id: Date.now().toString(),
+            content: `🔄 **Page Changed**: Now viewing **${newPageName}** page\n\nURL: ${iframeUrl}\n\nI'm ready to provide insights specific to this page!`,
+            sender: 'ai',
+            timestamp: new Date(),
+            pageContext: newPageName
+          };
+          setMessages(prev => [...prev, navMessage]);
+        }
+      } catch (error) {
+        // Cross-origin restrictions - use alternative method
+        console.log('Cross-origin iframe access blocked, using alternative detection');
+      }
+    };
+
+    // Multiple detection methods
+    const interval = setInterval(checkNavigation, 500);
+    
+    const handleLoad = () => {
+      setTimeout(checkNavigation, 100);
+    };
+
+    iframe.addEventListener('load', handleLoad);
+
+    return () => {
+      clearInterval(interval);
+      iframe.removeEventListener('load', handleLoad);
+    };
+  }, [websiteData, setSearchParams]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -443,7 +492,22 @@ const Chat: React.FC<ChatProps> = () => {
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups allow-pointer-lock allow-modals"
+                    onLoad={() => {
+                      // Additional load detection
+                      setTimeout(() => {
+                        try {
+                          const iframeUrl = iframeRef.current?.contentWindow?.location.href;
+                          if (iframeUrl && iframeUrl !== currentPageUrl && iframeUrl !== 'about:blank') {
+                            const newPageName = extractPageName(iframeUrl);
+                            setCurrentPageUrl(iframeUrl);
+                            setCurrentPageName(newPageName);
+                            setSearchParams({ page: iframeUrl });
+                          }
+                        } catch (e) {
+                          console.log('iframe navigation detection via onLoad blocked by CORS');
+                        }
+                      }, 500);
+                    }}
                   />
                 </div>
               </div>
