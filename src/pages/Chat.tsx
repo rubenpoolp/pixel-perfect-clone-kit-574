@@ -237,12 +237,23 @@ const Chat: React.FC<ChatProps> = () => {
   }, [inputMessage, currentPageName, websiteData, addMessage]);
 
   const navigateToPage = useCallback((url: string) => {
-    setCurrentPageUrl(url);
-    const pageName = extractPageName(url);
+    // Clean up URL to prevent double slashes and other issues
+    let cleanUrl = url.trim();
+    
+    // Fix double slashes in path (except after protocol)
+    cleanUrl = cleanUrl.replace(/([^:]\/)\/+/g, '$1');
+    
+    // Ensure URL starts with protocol
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+    
+    setCurrentPageUrl(cleanUrl);
+    const pageName = extractPageName(cleanUrl);
     setCurrentPageName(pageName);
     
     // Update URL with page parameter
-    setSearchParams({ page: url });
+    setSearchParams({ page: cleanUrl });
     
     // Add context message
     addMessage({
