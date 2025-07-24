@@ -45,10 +45,7 @@ export class WebsiteService {
   // Website management
   static async createWebsite(data: CreateWebsiteData): Promise<Website> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Authentication required. Please sign in to continue.');
-    }
-
+    
     const { data: website, error } = await supabase
       .from('websites')
       .insert([{
@@ -57,7 +54,7 @@ export class WebsiteService {
         title: data.title,
         description: data.description,
         industry: data.industry,
-        user_id: user.id
+        user_id: user?.id || null
       }])
       .select()
       .single();
@@ -111,9 +108,6 @@ export class WebsiteService {
   // Analysis session management
   static async createAnalysisSession(data: CreateAnalysisSessionData): Promise<AnalysisSession> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Authentication required. Please sign in to continue.');
-    }
 
     const { data: session, error } = await supabase
       .from('analysis_sessions')
@@ -121,7 +115,7 @@ export class WebsiteService {
         website_id: data.website_id,
         current_page: data.current_page,
         session_data: data.session_data || {},
-        user_id: user.id
+        user_id: user?.id || null
       }])
       .select()
       .single();
@@ -156,9 +150,6 @@ export class WebsiteService {
   // Conversation message management
   static async saveMessage(data: CreateMessageData): Promise<ConversationMessage> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Authentication required. Please sign in to continue.');
-    }
 
     const { data: message, error } = await supabase
       .from('conversation_messages')
@@ -168,7 +159,7 @@ export class WebsiteService {
         content: data.content,
         suggestions: data.suggestions || [],
         metadata: data.metadata || {},
-        user_id: user.id
+        user_id: user?.id || null
       }])
       .select()
       .single();
@@ -191,9 +182,6 @@ export class WebsiteService {
   // Analysis report management
   static async createAnalysisReport(data: CreateAnalysisReportData): Promise<AnalysisReport> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Authentication required. Please sign in to continue.');
-    }
 
     const { data: report, error } = await supabase
       .from('analysis_reports')
@@ -204,7 +192,7 @@ export class WebsiteService {
         recommendations: data.recommendations,
         metrics: data.metrics,
         export_data: data.export_data || {},
-        user_id: user.id
+        user_id: user?.id || null
       }])
       .select()
       .single();

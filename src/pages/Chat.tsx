@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link } from 'lucide-react';
 import { AnalysisService } from '@/services/AnalysisService';
 import { useToast } from '@/components/ui/use-toast';
+import { DemoPrompt } from '@/components/DemoPrompt';
 
 interface Message {
   id: string;
@@ -44,6 +45,8 @@ const Chat: React.FC<ChatProps> = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDemoPrompt, setShowDemoPrompt] = useState(false);
+  const [demoPromptClosed, setDemoPromptClosed] = useState(false);
 
   const extractPageName = useCallback((url: string): string => {
     try {
@@ -494,6 +497,14 @@ Let's start!`,
           )}
         </div>
       </div>
+      
+      {/* Demo Prompt Modal */}
+      {!demoPromptClosed && (
+        <DemoPrompt 
+          messageCount={messages.filter(m => m.sender === 'user').length}
+          onClose={() => setDemoPromptClosed(true)}
+        />
+      )}
     </div>
   );
 };
