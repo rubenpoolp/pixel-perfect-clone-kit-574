@@ -146,7 +146,7 @@ const Chat: React.FC<ChatProps> = () => {
       
       // Create personalized first message
       addMessage({
-        content: `👋 Hey there! I'm Clutch — your AI co-pilot for website optimization.
+        content: `👋 Hey there! I'm your AI co-pilot for website optimization.
 
 I just took a look at your site and I'm ready to share quick, actionable ideas to boost conversions and improve the user experience.
 
