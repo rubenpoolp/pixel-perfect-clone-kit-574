@@ -140,39 +140,39 @@ const Chat: React.FC<ChatProps> = () => {
       <Header />
       
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel - Chat Interface */}
-        <div className="w-full md:w-1/2 flex flex-col bg-white border-r border-[rgba(28,28,28,0.1)]">
+        {/* Left Panel - Chat Interface (30% width, dark mode) */}
+        <div className="w-full md:w-[30%] flex flex-col bg-gray-900 border-r border-gray-700">
           {/* Chat Header */}
-          <div className="border-b border-[rgba(28,28,28,0.1)] p-4 bg-[rgba(247,244,237,1)]">
-            <h2 className="text-[rgba(28,28,28,1)] text-lg font-medium">
+          <div className="border-b border-gray-700 p-4 bg-gray-800">
+            <h2 className="text-white text-lg font-medium">
               Website Optimization Assistant
             </h2>
-            <p className="text-[rgba(95,95,93,1)] text-sm mt-1">
+            <p className="text-gray-300 text-sm mt-1">
               Get personalized insights to improve your website
             </p>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900">
             {messages.map((message) => (
               <div key={message.id}>
                 <div className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`flex max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       message.sender === 'user' 
-                        ? 'bg-[rgba(28,28,28,1)]' 
-                        : 'bg-[rgba(247,244,237,1)] border border-[rgba(28,28,28,0.2)]'
+                        ? 'bg-blue-600' 
+                        : 'bg-gray-700 border border-gray-600'
                     }`}>
                       {message.sender === 'user' ? (
                         <User className="w-4 h-4 text-white" />
                       ) : (
-                        <Bot className="w-4 h-4 text-[rgba(28,28,28,1)]" />
+                        <Bot className="w-4 h-4 text-gray-300" />
                       )}
                     </div>
                     <div className={`rounded-lg px-4 py-2 ${
                       message.sender === 'user'
-                        ? 'bg-[rgba(28,28,28,1)] text-white'
-                        : 'bg-[rgba(247,244,237,1)] text-[rgba(28,28,28,1)] border border-[rgba(28,28,28,0.1)]'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800 text-gray-100 border border-gray-700'
                     }`}>
                       <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
                     </div>
@@ -186,7 +186,7 @@ const Chat: React.FC<ChatProps> = () => {
                       <button
                         key={index}
                         onClick={() => setInputMessage(suggestion)}
-                        className="bg-white border border-[rgba(28,28,28,0.2)] text-[rgba(28,28,28,1)] text-xs px-3 py-1 rounded-full hover:bg-[rgba(247,244,237,1)] transition-colors"
+                        className="bg-gray-800 border border-gray-600 text-gray-200 text-xs px-3 py-1 rounded-full hover:bg-gray-700 transition-colors"
                       >
                         {suggestion}
                       </button>
@@ -199,14 +199,14 @@ const Chat: React.FC<ChatProps> = () => {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex gap-2 max-w-[80%]">
-                  <div className="w-8 h-8 rounded-full bg-[rgba(247,244,237,1)] border border-[rgba(28,28,28,0.2)] flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-[rgba(28,28,28,1)]" />
+                  <div className="w-8 h-8 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-gray-300" />
                   </div>
-                  <div className="bg-[rgba(247,244,237,1)] border border-[rgba(28,28,28,0.1)] rounded-lg px-4 py-2">
+                  <div className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-[rgba(95,95,93,1)] rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-[rgba(95,95,93,1)] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-[rgba(95,95,93,1)] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 </div>
@@ -216,20 +216,20 @@ const Chat: React.FC<ChatProps> = () => {
           </div>
 
           {/* Message Input */}
-          <div className="border-t border-[rgba(28,28,28,0.1)] p-4">
+          <div className="border-t border-gray-700 p-4 bg-gray-900">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Ask about conversion optimization, UX improvements, or analytics..."
-                className="flex-1 bg-[rgba(247,244,237,1)] border border-[rgba(28,28,28,0.2)] rounded-lg px-4 py-2 text-[rgba(28,28,28,1)] placeholder-[rgba(95,95,93,1)] focus:outline-none focus:ring-2 focus:ring-[rgba(28,28,28,0.3)] focus:border-transparent text-sm"
+                className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 disabled={isLoading}
               />
               <Button
                 type="submit"
                 disabled={!inputMessage.trim() || isLoading}
-                className="bg-[rgba(28,28,28,1)] text-white hover:bg-[rgba(28,28,28,0.9)] px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+                className="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
               </Button>
@@ -241,7 +241,7 @@ const Chat: React.FC<ChatProps> = () => {
                 <button
                   key={suggestion}
                   onClick={() => setInputMessage(suggestion)}
-                  className="bg-white border border-[rgba(28,28,28,0.2)] text-[rgba(28,28,28,1)] text-xs px-3 py-1 rounded-full hover:bg-[rgba(247,244,237,1)] transition-colors"
+                  className="bg-gray-800 border border-gray-600 text-gray-200 text-xs px-3 py-1 rounded-full hover:bg-gray-700 transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -253,7 +253,7 @@ const Chat: React.FC<ChatProps> = () => {
                 <button
                   key={suggestion}
                   onClick={() => setInputMessage(suggestion)}
-                  className="bg-white border border-[rgba(28,28,28,0.2)] text-[rgba(28,28,28,1)] text-xs px-3 py-1 rounded-full hover:bg-[rgba(247,244,237,1)] transition-colors"
+                  className="bg-gray-800 border border-gray-600 text-gray-200 text-xs px-3 py-1 rounded-full hover:bg-gray-700 transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -262,7 +262,7 @@ const Chat: React.FC<ChatProps> = () => {
           </div>
         </div>
 
-        {/* Right Panel - Website Preview */}
+        {/* Right Panel - Website Preview (70% width) */}
         <div className="flex flex-1 bg-[rgba(252,251,248,1)] flex-col">
           {websiteData ? (
             <div className="flex flex-col h-full">
