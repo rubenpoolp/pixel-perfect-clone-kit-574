@@ -196,7 +196,7 @@ Let's start!`,
     try {
       // Use AnalysisService which handles both real AI and fallback
       const analysis = await AnalysisService.analyzeWebsite({
-        websiteUrl: websiteData.websiteUrl,
+        websiteUrl: currentPageUrl,
         currentPage: currentPageName,
         productType: websiteData.productType,
         userQuestion: userMessage
