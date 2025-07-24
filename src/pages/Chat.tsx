@@ -62,7 +62,7 @@ const Chat: React.FC<ChatProps> = () => {
       // Create personalized first message
       const welcomeMessage: Message = {
         id: '1',
-        content: `Great! I've loaded your ${data.productType} website: **${data.websiteUrl}**. Currently viewing: **${initialPageName}**\n\nNavigate through your website and I'll provide page-specific insights. The navigation tracking is now active!\n\nWhat would you like to improve on this page?`,
+        content: `🚀 **Connected to ${data.productType} website**: **${data.websiteUrl}**\n\n**Current page**: ${initialPageName}\n\nI'll automatically track your navigation as you browse through your website. Simply click on links within the site and I'll update the context to provide page-specific insights!\n\n💡 **Tip**: Navigate naturally through your website - I'll detect page changes and provide relevant analysis for each page you visit.`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
@@ -181,17 +181,24 @@ const Chat: React.FC<ChatProps> = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Enhanced iframe navigation detection
+  // Enhanced iframe navigation detection with multiple strategies
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe || !websiteData) return;
 
     let lastUrl = currentPageUrl;
+    let attempts = 0;
+    const maxAttempts = 3;
     
     const checkNavigation = () => {
+      attempts++;
       try {
+        // Try to access iframe location
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
         const iframeUrl = iframe.contentWindow?.location.href;
+        
         if (iframeUrl && iframeUrl !== lastUrl && iframeUrl !== 'about:blank') {
+          console.log('Navigation detected:', iframeUrl);
           lastUrl = iframeUrl;
           const newPageName = extractPageName(iframeUrl);
           
@@ -202,33 +209,51 @@ const Chat: React.FC<ChatProps> = () => {
           // Add navigation message
           const navMessage: Message = {
             id: Date.now().toString(),
-            content: `🔄 **Page Changed**: Now viewing **${newPageName}** page\n\nURL: ${iframeUrl}\n\nI'm ready to provide insights specific to this page!`,
+            content: `🔄 **Navigation Detected!**\n\n**Page**: ${newPageName}\n**URL**: ${iframeUrl}\n\nI'm now analyzing this specific page. What would you like to know about it?`,
             sender: 'ai',
             timestamp: new Date(),
-            pageContext: newPageName
+            pageContext: newPageName,
+            suggestions: getInitialSuggestions(websiteData.productType)
           };
           setMessages(prev => [...prev, navMessage]);
+          attempts = 0; // Reset attempts on successful detection
         }
       } catch (error) {
-        // Cross-origin restrictions - use alternative method
-        console.log('Cross-origin iframe access blocked, using alternative detection');
+        if (attempts >= maxAttempts) {
+          console.log('CORS restrictions detected - iframe navigation tracking limited');
+          attempts = 0;
+        }
       }
     };
 
-    // Multiple detection methods
-    const interval = setInterval(checkNavigation, 500);
+    // Multiple detection strategies
+    const interval = setInterval(checkNavigation, 1000); // Check every second
     
-    const handleLoad = () => {
-      setTimeout(checkNavigation, 100);
+    // Enhanced load detection
+    const handleIframeLoad = () => {
+      console.log('Iframe load event triggered');
+      setTimeout(() => checkNavigation(), 100);
+      setTimeout(() => checkNavigation(), 500);
+      setTimeout(() => checkNavigation(), 1000);
     };
 
-    iframe.addEventListener('load', handleLoad);
+    // Focus detection (when user interacts with iframe)
+    const handleIframeFocus = () => {
+      setTimeout(() => checkNavigation(), 100);
+    };
+
+    iframe.addEventListener('load', handleIframeLoad);
+    iframe.addEventListener('focus', handleIframeFocus);
+
+    // Initial check
+    setTimeout(() => checkNavigation(), 1000);
 
     return () => {
       clearInterval(interval);
-      iframe.removeEventListener('load', handleLoad);
+      iframe.removeEventListener('load', handleIframeLoad);
+      iframe.removeEventListener('focus', handleIframeFocus);
     };
-  }, [websiteData, setSearchParams]);
+  }, [websiteData, setSearchParams, getInitialSuggestions]);
 
   useEffect(() => {
     scrollToBottom();
@@ -492,21 +517,9 @@ const Chat: React.FC<ChatProps> = () => {
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
+                    allow="navigation-top"
                     onLoad={() => {
-                      // Additional load detection
-                      setTimeout(() => {
-                        try {
-                          const iframeUrl = iframeRef.current?.contentWindow?.location.href;
-                          if (iframeUrl && iframeUrl !== currentPageUrl && iframeUrl !== 'about:blank') {
-                            const newPageName = extractPageName(iframeUrl);
-                            setCurrentPageUrl(iframeUrl);
-                            setCurrentPageName(newPageName);
-                            setSearchParams({ page: iframeUrl });
-                          }
-                        } catch (e) {
-                          console.log('iframe navigation detection via onLoad blocked by CORS');
-                        }
-                      }, 500);
+                      console.log('Iframe onLoad triggered for:', currentPageUrl);
                     }}
                   />
                 </div>
