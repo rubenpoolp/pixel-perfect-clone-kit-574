@@ -34,6 +34,59 @@ serve(async (req) => {
       analysisType = 'initial'
     }: AnalysisRequest = await req.json()
 
+    // Input validation and security checks
+    if (!websiteUrl || typeof websiteUrl !== 'string' || websiteUrl.trim() === '') {
+      return new Response(
+        JSON.stringify({ error: 'Valid website URL is required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // URL validation and sanitization
+    let sanitizedUrl: string;
+    try {
+      // Remove potentially dangerous characters
+      const cleaned = websiteUrl.trim().replace(/[<>'"]/g, '');
+      
+      // Ensure URL has protocol
+      if (!/^https?:\/\//i.test(cleaned)) {
+        sanitizedUrl = `https://${cleaned}`;
+      } else {
+        sanitizedUrl = cleaned;
+      }
+      
+      const url = new URL(sanitizedUrl);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Invalid URL format. Please enter a valid URL.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Rate limiting and abuse prevention
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    console.log(`Analysis request from IP: ${clientIP} for URL: ${sanitizedUrl}`);
+
+    // Content length validation
+    if (userQuestion && userQuestion.length > 1000) {
+      return new Response(
+        JSON.stringify({ error: 'User question too long. Please limit to 1000 characters.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Get API keys and initialize Supabase client
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')
@@ -51,22 +104,28 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-    // Log request details for debugging
+    // Log request details for debugging (with sanitized URL)
     console.log('Analysis request received:')
-    console.log('- Website URL:', websiteUrl)
+    console.log('- Website URL:', sanitizedUrl)
     console.log('- Current Page:', currentPage)
     console.log('- Product Type:', productType)
-    console.log('- User Question:', userQuestion)
+    console.log('- User Question Length:', userQuestion?.length || 0)
+    console.log('- Session ID:', sessionId ? 'Present' : 'None')
     
-    // Capture screenshot and scrape content in parallel
-    console.log(`Capturing screenshot and scraping content for: ${websiteUrl}`)
-    const [pageContent, screenshot] = await Promise.all([
-      scrapePageContent(websiteUrl, firecrawlApiKey),
-      captureScreenshot(websiteUrl)
-    ])
+    // Capture screenshot and scrape content in parallel (with timeout)
+    console.log(`Capturing screenshot and scraping content for: ${sanitizedUrl}`)
+    const [pageContent, screenshot] = await Promise.race([
+      Promise.all([
+        scrapePageContent(sanitizedUrl, firecrawlApiKey),
+        captureScreenshot(sanitizedUrl)
+      ]),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+      )
+    ]) as [string, string | null];
     
     // Create enhanced system prompt with both text content and visual analysis
-    const systemPrompt = createSystemPrompt(websiteUrl, currentPage, productType, pageContent, screenshot, industry, analysisType)
+    const systemPrompt = createSystemPrompt(sanitizedUrl, currentPage, productType, pageContent, screenshot, industry, analysisType)
 
     // Get conversation history if sessionId is provided
     let conversationContext = ''
@@ -125,7 +184,7 @@ serve(async (req) => {
     const recommendations = extractRecommendations(content)
 
     // Log the successful analysis
-    console.log(`Analysis completed for ${websiteUrl} - ${currentPage}`)
+    console.log(`Analysis completed for ${sanitizedUrl} - ${currentPage}`)
 
     return new Response(
       JSON.stringify({ 
@@ -134,7 +193,8 @@ serve(async (req) => {
         metrics,
         recommendations,
         analysisType,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        sessionId: sessionId
       }),
       { 
         headers: { 
@@ -146,13 +206,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in analyze-website function:', error)
+    
+    // Don't expose internal errors in production
+    const errorMessage = error?.message?.includes('timeout') 
+      ? 'Request timeout. Please try again.'
+      : error?.message?.includes('Rate limit')
+      ? error.message
+      : 'Unable to analyze website. Please try again later.';
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to analyze website',
+        error: errorMessage,
         timestamp: new Date().toISOString()
       }),
       { 
-        status: 500,
+        status: error?.message?.includes('timeout') ? 408 : 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 

@@ -1,3 +1,5 @@
+import { DemoSessionService } from "./DemoSessionService";
+
 interface AnalysisRequest {
   websiteUrl: string;
   currentPage: string;
@@ -22,23 +24,54 @@ interface AnalysisResponse {
 }
 
 export class AnalysisService {
-  private static readonly FUNCTION_URL = '/api/analyze-website'; // This will be proxied to Supabase
-
   static async analyzeWebsite(request: AnalysisRequest): Promise<AnalysisResponse> {
     try {
+      // Check rate limiting for demo users
+      const rateCheck = DemoSessionService.checkRateLimit();
+      if (!rateCheck.canProceed) {
+        const resetTime = rateCheck.resetTime ? new Date(rateCheck.resetTime) : new Date();
+        throw new Error(`Rate limit exceeded. Please try again after ${resetTime.toLocaleTimeString()} or request a demo for unlimited access.`);
+      }
+
+      // Validate URL before processing
+      if (!request.websiteUrl || request.websiteUrl.trim() === '') {
+        throw new Error('Website URL is required');
+      }
+
+      // Basic URL format validation
+      try {
+        const url = new URL(request.websiteUrl);
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw new Error('Invalid URL protocol');
+        }
+      } catch {
+        throw new Error('Invalid URL format. Please enter a valid URL starting with http:// or https://');
+      }
+
+      // Add demo session context if no session ID provided
+      const enrichedRequest = {
+        ...request,
+        sessionId: request.sessionId || DemoSessionService.getDemoSessionId()
+      };
+
       // Use Supabase functions for the analysis
       const { supabase } = await import('@/integrations/supabase/client');
       
       const { data, error } = await supabase.functions.invoke('analyze-website', {
-        body: JSON.stringify(request)
+        body: JSON.stringify(enrichedRequest)
       });
 
       if (error) {
-        throw error;
+        console.error('Analysis function error:', error);
+        return this.getFallbackResponse(request);
       }
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (data?.error) {
+        console.error('Analysis data error:', data.error);
+        if (data.error.includes('Rate limit')) {
+          throw new Error(data.error);
+        }
+        return this.getFallbackResponse(request);
       }
 
       return {
@@ -52,7 +85,16 @@ export class AnalysisService {
     } catch (error) {
       console.error('Analysis service error:', error);
       
-      // Fallback to enhanced demo response
+      // Re-throw rate limit and validation errors to show proper message
+      if (error instanceof Error && (
+        error.message.includes('Rate limit') || 
+        error.message.includes('Invalid URL') ||
+        error.message.includes('required')
+      )) {
+        throw error;
+      }
+      
+      // Fallback to enhanced demo response for other errors
       return this.getFallbackResponse(request);
     }
   }
@@ -80,7 +122,18 @@ export class AnalysisService {
       "Add social proof elements"
     ];
 
-    return { content, suggestions };
+    return { 
+      content, 
+      suggestions,
+      metrics: {
+        urgency: 'medium',
+        impact: 'medium',
+        difficulty: 'low',
+        estimatedImpact: '15-25%'
+      },
+      analysisType: request.analysisType || 'initial',
+      timestamp: new Date().toISOString()
+    };
   }
 
   private static getPageSpecificContext(pageName: string, productType: string): string {

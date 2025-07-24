@@ -5,6 +5,7 @@ import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigati
 import { AnalysisService } from '@/services/AnalysisService';
 import { useToast } from '@/components/ui/use-toast';
 import { DemoPrompt } from '@/components/DemoPrompt';
+import { DemoSessionStatus } from '@/components/DemoSessionStatus';
 
 interface Message {
   id: string;
@@ -302,6 +303,11 @@ Let's start!`,
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Demo Session Status */}
+          <div className="p-4 border-b border-neutral-700">
+            <DemoSessionStatus onRequestDemo={() => setShowDemoPrompt(true)} />
           </div>
 
           {/* Messages Area */}
