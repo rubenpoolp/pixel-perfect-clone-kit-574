@@ -413,11 +413,8 @@ const Chat: React.FC<ChatProps> = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-yellow-400 text-xs">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>UPDATE URL WHEN YOU NAVIGATE!</span>
+                  <div className="flex items-center gap-2 text-blue-400 text-sm">
+                    <span>Copy paste the link of the page you want insights on</span>
                   </div>
                   <div className="flex gap-2">
                     <input
@@ -430,40 +427,14 @@ const Chat: React.FC<ChatProps> = () => {
                           navigateToPage(currentPageUrl);
                         }
                       }}
-                      className="flex-1 text-sm bg-neutral-700 border-2 border-yellow-500 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-400"
-                      placeholder="👆 Copy & paste current page URL here when you navigate!"
+                      className="flex-1 text-sm bg-neutral-700 border-2 border-blue-500 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-400"
+                      placeholder="Paste page URL here..."
                     />
                     <button
                       onClick={() => navigateToPage(currentPageUrl)}
-                      className="px-4 py-2 text-sm bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors font-medium"
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium"
                     >
-                      UPDATE
-                    </button>
-                  </div>
-                  <div className="flex gap-1 flex-wrap">
-                    <button
-                      onClick={() => navigateToPage(websiteData.websiteUrl)}
-                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
-                    >
-                      🏠 Home
-                    </button>
-                    <button
-                      onClick={() => navigateToPage(websiteData.websiteUrl + '/about')}
-                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
-                    >
-                      About
-                    </button>
-                    <button
-                      onClick={() => navigateToPage(websiteData.websiteUrl + '/pricing')}
-                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
-                    >
-                      Pricing
-                    </button>
-                    <button
-                      onClick={() => navigateToPage(websiteData.websiteUrl + '/contact')}
-                      className="px-2 py-1 text-xs bg-neutral-600 text-gray-300 rounded hover:bg-neutral-500"
-                    >
-                      Contact
+                      ANALYZE
                     </button>
                   </div>
                 </div>
