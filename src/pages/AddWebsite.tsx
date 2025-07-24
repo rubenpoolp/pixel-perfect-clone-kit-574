@@ -49,7 +49,7 @@ const AddWebsite = () => {
 
           <div className="mb-6">
             <label htmlFor="product-type" className="block text-[rgba(28,28,28,1)] text-sm font-medium mb-2">
-              Product Type
+              Website Type
             </label>
             <select
               id="product-type"
