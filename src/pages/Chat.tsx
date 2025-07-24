@@ -146,7 +146,15 @@ const Chat: React.FC<ChatProps> = () => {
       
       // Create personalized first message
       addMessage({
-        content: `👋 **Welcome! I'm Jackie, your AI website optimization expert.**\n\nI've analyzed your website and I'm ready to give you personalized, actionable insights that can immediately improve your conversions and user experience.\n\n**Currently analyzing:** ${initialPageName} on ${new URL(data.websiteUrl).hostname}\n\nI can help you identify conversion barriers, UX improvements, and growth opportunities that your competitors might be missing.\n\n**What would you like to optimize first?**`,
+        content: `👋 Hey there! I'm Jackie — your AI co-pilot for website optimization.
+
+I just took a look at your site and I'm ready to share quick, actionable ideas to boost conversions and improve the user experience.
+
+Right now, I'm digging into: the ${initialPageName} page on ${new URL(data.websiteUrl).hostname}
+
+Think of me as your growth sidekick — here to help you spot UX issues, remove friction, and find smart ways to outperform your competitors.
+
+Let's start!`,
         sender: 'ai',
         timestamp: new Date(),
         suggestions: getInitialSuggestions(data.productType),
