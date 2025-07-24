@@ -176,140 +176,219 @@ const Chat: React.FC<ChatProps> = () => {
     setMessages(prev => [...prev, contextMessage]);
   };
 
-  // Enhanced navigation detection
+  // Aggressive navigation tracking system
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    let lastUrl = currentPageUrl;
-    let checkCount = 0;
-    const maxChecks = 50; // Stop after 50 attempts
+    let isTrackingActive = true;
+    let lastKnownUrl = currentPageUrl;
+    let fastPollInterval: NodeJS.Timeout;
+    let slowPollInterval: NodeJS.Timeout;
+    let iframeHasFocus = false;
 
-    // Polling function to check for URL changes
-    const checkForNavigation = () => {
-      try {
-        // Try to access iframe URL (works for same-origin)
-        const currentUrl = iframe.contentWindow?.location.href;
-        if (currentUrl && currentUrl !== lastUrl) {
-          lastUrl = currentUrl;
-          const pageName = extractPageName(currentUrl);
-          setCurrentPageUrl(currentUrl);
-          setCurrentPageName(pageName);
-          setSearchParams({ page: currentUrl });
-          
-          const contextMessage: Message = {
-            id: Date.now().toString(),
-            content: `🔄 **Detected navigation to ${pageName}** - I'm now ready to provide insights specific to this page. What would you like to optimize here?`,
-            sender: 'ai',
-            timestamp: new Date(),
-            pageContext: pageName,
-            suggestions: ['Analyze this page layout', 'Check conversion potential', 'Review user experience', 'Suggest improvements']
-          };
-          setMessages(prev => [...prev, contextMessage]);
-          return;
+    // Fast polling when iframe is active
+    const startFastPolling = () => {
+      clearInterval(fastPollInterval);
+      fastPollInterval = setInterval(() => {
+        if (!isTrackingActive) return;
+        
+        try {
+          const currentUrl = iframe.contentWindow?.location.href;
+          if (currentUrl && currentUrl !== lastKnownUrl) {
+            lastKnownUrl = currentUrl;
+            navigateToPage(currentUrl);
+          }
+        } catch (e) {
+          // Cross-origin - try to detect changes through other means
+          detectCrossOriginNavigation();
         }
-      } catch (e) {
-        // Cross-origin restriction - try alternative detection
-      }
+      }, 200); // Very frequent polling when active
+    };
 
-      // Alternative: Check if iframe's document title changed (sometimes accessible)
-      try {
-        const title = iframe.contentDocument?.title;
-        if (title && title !== document.title) {
-          // Document title changed, likely navigated
-          console.log('Navigation detected via title change:', title);
+    // Slower polling when iframe is not focused
+    const startSlowPolling = () => {
+      clearInterval(slowPollInterval);
+      slowPollInterval = setInterval(() => {
+        if (!isTrackingActive || iframeHasFocus) return;
+        
+        try {
+          const currentUrl = iframe.contentWindow?.location.href;
+          if (currentUrl && currentUrl !== lastKnownUrl) {
+            lastKnownUrl = currentUrl;
+            navigateToPage(currentUrl);
+          }
+        } catch (e) {
+          // Cross-origin
         }
-      } catch (e) {
-        // Still cross-origin restricted
-      }
+      }, 2000);
+    };
 
-      // Continue checking if under limit
-      checkCount++;
-      if (checkCount < maxChecks) {
-        setTimeout(checkForNavigation, 1000); // Check every second
+    // Cross-origin navigation detection
+    const detectCrossOriginNavigation = () => {
+      // Show user prompt to manually track
+      const hintMessage: Message = {
+        id: Date.now().toString(),
+        content: `🔄 **Navigation detected!** Please copy the current URL and paste it below to continue tracking.`,
+        sender: 'ai',
+        timestamp: new Date(),
+        suggestions: ['Track current page', 'Copy URL from address bar']
+      };
+      setMessages(prev => {
+        // Only add if not already showing similar message
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage?.content.includes('Navigation detected!')) {
+          return prev;
+        }
+        return [...prev, hintMessage];
+      });
+    };
+
+    // Event listeners for iframe focus/blur
+    const handleIframeFocus = () => {
+      iframeHasFocus = true;
+      startFastPolling();
+      clearInterval(slowPollInterval);
+    };
+
+    const handleIframeBlur = () => {
+      iframeHasFocus = false;
+      clearInterval(fastPollInterval);
+      startSlowPolling();
+    };
+
+    // Mouse events to detect interaction
+    const handleMouseEnter = () => {
+      startFastPolling();
+    };
+
+    const handleMouseLeave = () => {
+      if (!iframeHasFocus) {
+        clearInterval(fastPollInterval);
+        startSlowPolling();
       }
     };
 
-    // Start checking for navigation
-    const timer = setTimeout(checkForNavigation, 1000);
+    // Click detection
+    const handleClick = () => {
+      // User clicked in iframe, likely navigating
+      setTimeout(() => {
+        try {
+          const newUrl = iframe.contentWindow?.location.href;
+          if (newUrl && newUrl !== lastKnownUrl) {
+            lastKnownUrl = newUrl;
+            navigateToPage(newUrl);
+          }
+        } catch (e) {
+          detectCrossOriginNavigation();
+        }
+      }, 300);
+      
+      // Start aggressive polling for a short time after click
+      let clickPollCount = 0;
+      const clickPollInterval = setInterval(() => {
+        clickPollCount++;
+        try {
+          const newUrl = iframe.contentWindow?.location.href;
+          if (newUrl && newUrl !== lastKnownUrl) {
+            lastKnownUrl = newUrl;
+            navigateToPage(newUrl);
+            clearInterval(clickPollInterval);
+          }
+        } catch (e) {
+          // Cross-origin
+        }
+        
+        if (clickPollCount > 20) { // Stop after 4 seconds
+          clearInterval(clickPollInterval);
+        }
+      }, 200);
+    };
 
-    // Also listen for iframe load events
+    // Load event
     const handleLoad = () => {
-      checkCount = 0; // Reset counter on load
-      setTimeout(checkForNavigation, 500); // Start checking after load
+      setTimeout(() => {
+        try {
+          const newUrl = iframe.contentWindow?.location.href;
+          if (newUrl && newUrl !== lastKnownUrl) {
+            lastKnownUrl = newUrl;
+            navigateToPage(newUrl);
+          }
+        } catch (e) {
+          detectCrossOriginNavigation();
+        }
+      }, 100);
     };
 
+    // Add all event listeners
+    iframe.addEventListener('focus', handleIframeFocus);
+    iframe.addEventListener('blur', handleIframeBlur);
+    iframe.addEventListener('mouseenter', handleMouseEnter);
+    iframe.addEventListener('mouseleave', handleMouseLeave);
+    iframe.addEventListener('click', handleClick);
     iframe.addEventListener('load', handleLoad);
 
+    // Start with slow polling
+    startSlowPolling();
+
+    // Cleanup
     return () => {
-      clearTimeout(timer);
+      isTrackingActive = false;
+      clearInterval(fastPollInterval);
+      clearInterval(slowPollInterval);
+      iframe.removeEventListener('focus', handleIframeFocus);
+      iframe.removeEventListener('blur', handleIframeBlur);
+      iframe.removeEventListener('mouseenter', handleMouseEnter);
+      iframe.removeEventListener('mouseleave', handleMouseLeave);
+      iframe.removeEventListener('click', handleClick);
       iframe.removeEventListener('load', handleLoad);
     };
   }, [currentPageUrl, setSearchParams, setMessages]);
 
-  // Listen for focus events that might indicate navigation
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-
-    const handleFocus = () => {
-      // When iframe gets focus, user might have navigated
-      setTimeout(() => {
-        try {
-          const newUrl = iframe.contentWindow?.location.href;
-          if (newUrl && newUrl !== currentPageUrl) {
-            navigateToPage(newUrl);
-          }
-        } catch (e) {
-          // Cross-origin - show hint for manual tracking
-          const hintMessage: Message = {
-            id: Date.now().toString(),
-            content: `💡 **Navigation detected!** If you've moved to a new page, please copy the URL from your browser's address bar and use the "Track Page" button below to get page-specific insights.`,
-            sender: 'ai',
-            timestamp: new Date(),
-            pageContext: currentPageName
-          };
-          setMessages(prev => [...prev, hintMessage]);
-        }
-      }, 500);
-    };
-
-    iframe.addEventListener('focus', handleFocus);
-    return () => iframe.removeEventListener('focus', handleFocus);
-  }, [currentPageUrl, currentPageName]);
-
-  // Smart URL tracking helper
+  // Enhanced tracking function
   const trackCurrentPage = () => {
     const urlInput = document.querySelector('#url-tracker') as HTMLInputElement;
     const url = urlInput?.value.trim();
     
-    if (!url) {
-      // Try to get URL from clipboard
+    if (url) {
+      navigateToPage(url);
+      urlInput.value = '';
+      
+      // Success feedback
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        content: `✅ **Page tracked successfully!** Now analyzing: ${extractPageName(url)}. What would you like to optimize on this page?`,
+        sender: 'ai',
+        timestamp: new Date(),
+        pageContext: extractPageName(url),
+        suggestions: ['Analyze page layout', 'Check conversion elements', 'Review user flow', 'Suggest improvements']
+      };
+      setMessages(prev => [...prev, successMessage]);
+    } else {
+      // Try clipboard
       navigator.clipboard.readText().then(clipboardText => {
         if (clipboardText.startsWith('http')) {
           navigateToPage(clipboardText);
           const successMessage: Message = {
             id: Date.now().toString(),
-            content: `✅ **Page tracked from clipboard!** Now analyzing: ${extractPageName(clipboardText)}`,
+            content: `✅ **URL from clipboard tracked!** Now analyzing: ${extractPageName(clipboardText)}`,
             sender: 'ai',
             timestamp: new Date(),
             pageContext: extractPageName(clipboardText)
           };
           setMessages(prev => [...prev, successMessage]);
+        } else {
+          throw new Error('No valid URL in clipboard');
         }
       }).catch(() => {
-        // Clipboard access failed
         const errorMessage: Message = {
           id: Date.now().toString(),
-          content: `⚠️ Please paste the current page URL in the input field to track your navigation.`,
+          content: `⚠️ **Please paste the current page URL** in the input field to track your navigation and get specific insights.`,
           sender: 'ai',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
       });
-    } else {
-      navigateToPage(url);
-      urlInput.value = '';
     }
   };
 
@@ -578,30 +657,32 @@ const Chat: React.FC<ChatProps> = () => {
                   />
                 </div>
                 
-                {/* Quick Track Section */}
-                <div className="mt-3 flex gap-2 items-center">
-                  <input
-                    id="url-tracker"
-                    type="url"
-                    placeholder="📋 Paste current page URL here or leave empty to try clipboard..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        trackCurrentPage();
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={trackCurrentPage}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-1"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    Track Page
-                  </button>
-                </div>
-                
-                <div className="mt-2 text-xs text-gray-500 text-center">
-                  💡 Navigate freely in the preview above. Copy & paste URLs here for page-specific AI insights.
+                {/* Enhanced Quick Track Section */}
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex gap-2 items-center mb-2">
+                    <input
+                      id="url-tracker"
+                      type="url"
+                      placeholder="📋 Paste current page URL here for instant analysis..."
+                      className="flex-1 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          trackCurrentPage();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={trackCurrentPage}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-1 whitespace-nowrap"
+                    >
+                      <Navigation className="w-4 h-4" />
+                      Track Page
+                    </button>
+                  </div>
+                  <div className="text-xs text-blue-600 flex items-center gap-1">
+                    <span>💡</span>
+                    <span><strong>Quick tip:</strong> After clicking any link above, copy the URL from your browser's address bar and paste it here for page-specific insights!</span>
+                  </div>
                 </div>
               </div>
               
