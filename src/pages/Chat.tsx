@@ -176,64 +176,141 @@ const Chat: React.FC<ChatProps> = () => {
     setMessages(prev => [...prev, contextMessage]);
   };
 
-  // Monitor iframe for navigation changes using a different approach
+  // Enhanced navigation detection
   useEffect(() => {
-    if (!websiteData) return;
-
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    // Create a mutation observer to watch for src changes
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
-          const newSrc = iframe.src;
-          if (newSrc && newSrc !== currentPageUrl) {
-            const pageName = extractPageName(newSrc);
-            setCurrentPageUrl(newSrc);
-            setCurrentPageName(pageName);
-            setSearchParams({ page: newSrc });
-            
-            const contextMessage: Message = {
-              id: Date.now().toString(),
-              content: `📍 Navigated to **${pageName}** page. I can now provide specific insights for this page.`,
-              sender: 'ai',
-              timestamp: new Date(),
-              pageContext: pageName
-            };
-            setMessages(prev => [...prev, contextMessage]);
-          }
+    let lastUrl = currentPageUrl;
+    let checkCount = 0;
+    const maxChecks = 50; // Stop after 50 attempts
+
+    // Polling function to check for URL changes
+    const checkForNavigation = () => {
+      try {
+        // Try to access iframe URL (works for same-origin)
+        const currentUrl = iframe.contentWindow?.location.href;
+        if (currentUrl && currentUrl !== lastUrl) {
+          lastUrl = currentUrl;
+          const pageName = extractPageName(currentUrl);
+          setCurrentPageUrl(currentUrl);
+          setCurrentPageName(pageName);
+          setSearchParams({ page: currentUrl });
+          
+          const contextMessage: Message = {
+            id: Date.now().toString(),
+            content: `🔄 **Detected navigation to ${pageName}** - I'm now ready to provide insights specific to this page. What would you like to optimize here?`,
+            sender: 'ai',
+            timestamp: new Date(),
+            pageContext: pageName,
+            suggestions: ['Analyze this page layout', 'Check conversion potential', 'Review user experience', 'Suggest improvements']
+          };
+          setMessages(prev => [...prev, contextMessage]);
+          return;
         }
-      });
-    });
+      } catch (e) {
+        // Cross-origin restriction - try alternative detection
+      }
 
-    // Observe the iframe for attribute changes
-    observer.observe(iframe, {
-      attributes: true,
-      attributeFilter: ['src']
-    });
+      // Alternative: Check if iframe's document title changed (sometimes accessible)
+      try {
+        const title = iframe.contentDocument?.title;
+        if (title && title !== document.title) {
+          // Document title changed, likely navigated
+          console.log('Navigation detected via title change:', title);
+        }
+      } catch (e) {
+        // Still cross-origin restricted
+      }
 
-    return () => observer.disconnect();
-  }, [websiteData, setSearchParams]);
+      // Continue checking if under limit
+      checkCount++;
+      if (checkCount < maxChecks) {
+        setTimeout(checkForNavigation, 1000); // Check every second
+      }
+    };
 
-  // Add click tracking overlay to detect navigation
-  const handleIframeInteraction = () => {
-    // When user interacts with iframe, check if URL should change
-    setTimeout(() => {
-      const iframe = iframeRef.current;
-      if (iframe) {
+    // Start checking for navigation
+    const timer = setTimeout(checkForNavigation, 1000);
+
+    // Also listen for iframe load events
+    const handleLoad = () => {
+      checkCount = 0; // Reset counter on load
+      setTimeout(checkForNavigation, 500); // Start checking after load
+    };
+
+    iframe.addEventListener('load', handleLoad);
+
+    return () => {
+      clearTimeout(timer);
+      iframe.removeEventListener('load', handleLoad);
+    };
+  }, [currentPageUrl, setSearchParams, setMessages]);
+
+  // Listen for focus events that might indicate navigation
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const handleFocus = () => {
+      // When iframe gets focus, user might have navigated
+      setTimeout(() => {
         try {
-          // Try to get the current URL - this will fail for cross-origin
           const newUrl = iframe.contentWindow?.location.href;
           if (newUrl && newUrl !== currentPageUrl) {
             navigateToPage(newUrl);
           }
         } catch (e) {
-          // For cross-origin, we'll manually track common navigation patterns
-          console.log('Cross-origin navigation detected, manual tracking required');
+          // Cross-origin - show hint for manual tracking
+          const hintMessage: Message = {
+            id: Date.now().toString(),
+            content: `💡 **Navigation detected!** If you've moved to a new page, please copy the URL from your browser's address bar and use the "Track Page" button below to get page-specific insights.`,
+            sender: 'ai',
+            timestamp: new Date(),
+            pageContext: currentPageName
+          };
+          setMessages(prev => [...prev, hintMessage]);
         }
-      }
-    }, 1000);
+      }, 500);
+    };
+
+    iframe.addEventListener('focus', handleFocus);
+    return () => iframe.removeEventListener('focus', handleFocus);
+  }, [currentPageUrl, currentPageName]);
+
+  // Smart URL tracking helper
+  const trackCurrentPage = () => {
+    const urlInput = document.querySelector('#url-tracker') as HTMLInputElement;
+    const url = urlInput?.value.trim();
+    
+    if (!url) {
+      // Try to get URL from clipboard
+      navigator.clipboard.readText().then(clipboardText => {
+        if (clipboardText.startsWith('http')) {
+          navigateToPage(clipboardText);
+          const successMessage: Message = {
+            id: Date.now().toString(),
+            content: `✅ **Page tracked from clipboard!** Now analyzing: ${extractPageName(clipboardText)}`,
+            sender: 'ai',
+            timestamp: new Date(),
+            pageContext: extractPageName(clipboardText)
+          };
+          setMessages(prev => [...prev, successMessage]);
+        }
+      }).catch(() => {
+        // Clipboard access failed
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          content: `⚠️ Please paste the current page URL in the input field to track your navigation.`,
+          sender: 'ai',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      });
+    } else {
+      navigateToPage(url);
+      urlInput.value = '';
+    }
   };
 
   const scrollToBottom = () => {
@@ -490,56 +567,41 @@ const Chat: React.FC<ChatProps> = () => {
               
               {/* Website Preview */}
               <div className="flex-1 p-4">
-                <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden relative">
+                <div className="w-full h-full bg-white rounded-lg border border-[rgba(28,28,28,0.1)] overflow-hidden">
                   <iframe
                     ref={iframeRef}
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
                     sandbox="allow-same-origin allow-scripts allow-forms allow-top-navigation allow-navigation allow-popups allow-pointer-lock"
-                  />
-                  {/* Invisible overlay to detect clicks */}
-                  <div 
-                    className="absolute inset-0 pointer-events-none"
-                    onPointerDown={handleIframeInteraction}
-                    style={{ pointerEvents: 'auto', opacity: 0, zIndex: 1 }}
+                    allow="clipboard-read; clipboard-write"
                   />
                 </div>
                 
-                {/* Manual URL update section */}
-                <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-                  <div className="mb-2 text-gray-600">
-                    💡 <strong>Tip:</strong> For external sites, copy the URL from the address bar above and paste it below to track your navigation:
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      placeholder="Paste the current page URL here..."
-                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const url = (e.target as HTMLInputElement).value;
-                          if (url) {
-                            navigateToPage(url);
-                            (e.target as HTMLInputElement).value = '';
-                          }
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={(e) => {
-                        const input = (e.target as HTMLButtonElement).parentElement?.querySelector('input') as HTMLInputElement;
-                        const url = input?.value;
-                        if (url) {
-                          navigateToPage(url);
-                          input.value = '';
-                        }
-                      }}
-                      className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-                    >
-                      Track
-                    </button>
-                  </div>
+                {/* Quick Track Section */}
+                <div className="mt-3 flex gap-2 items-center">
+                  <input
+                    id="url-tracker"
+                    type="url"
+                    placeholder="📋 Paste current page URL here or leave empty to try clipboard..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        trackCurrentPage();
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={trackCurrentPage}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-1"
+                  >
+                    <Navigation className="w-4 h-4" />
+                    Track Page
+                  </button>
+                </div>
+                
+                <div className="mt-2 text-xs text-gray-500 text-center">
+                  💡 Navigate freely in the preview above. Copy & paste URLs here for page-specific AI insights.
                 </div>
               </div>
               
