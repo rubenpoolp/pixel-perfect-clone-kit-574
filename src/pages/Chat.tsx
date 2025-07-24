@@ -447,16 +447,16 @@ const Chat: React.FC<ChatProps> = () => {
         </div>
 
         {/* Right Panel - Website Preview (70% width) */}
-        <div className="flex flex-1 bg-[rgba(252,251,248,1)] flex-col">
+        <div className="flex flex-1 bg-gray-900 flex-col">
           {websiteData ? (
             <div className="flex flex-col h-full">
               {/* Website Controls */}
-              <div className="bg-white border-b border-gray-200 p-3">
+              <div className="bg-gray-800 border-b border-gray-700 p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-700">{currentPageName}</span>
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                    <span className="text-sm font-medium text-gray-200">{currentPageName}</span>
+                    <span className="bg-gray-700 text-gray-300 px-2 py-1 rounded text-xs">
                       {websiteData.productType}
                     </span>
                   </div>
@@ -464,24 +464,24 @@ const Chat: React.FC<ChatProps> = () => {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => iframeRef.current?.contentWindow?.history.back()}
-                      className="p-1 hover:bg-gray-100 rounded"
+                      className="p-1 hover:bg-gray-700 rounded"
                       title="Go Back"
                     >
-                      <ArrowLeft className="w-4 h-4 text-gray-500" />
+                      <ArrowLeft className="w-4 h-4 text-gray-400" />
                     </button>
                     <button 
                       onClick={() => iframeRef.current?.contentWindow?.history.forward()}
-                      className="p-1 hover:bg-gray-100 rounded"
+                      className="p-1 hover:bg-gray-700 rounded"
                       title="Go Forward"
                     >
-                      <ArrowRight className="w-4 h-4 text-gray-500" />
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
                     </button>
                     <button 
                       onClick={() => iframeRef.current?.contentWindow?.location.reload()}
-                      className="p-1 hover:bg-gray-100 rounded"
+                      className="p-1 hover:bg-gray-700 rounded"
                       title="Reload"
                     >
-                      <RotateCcw className="w-4 h-4 text-gray-500" />
+                      <RotateCcw className="w-4 h-4 text-gray-400" />
                     </button>
                   </div>
                 </div>
@@ -497,7 +497,7 @@ const Chat: React.FC<ChatProps> = () => {
                         navigateToPage(currentPageUrl);
                       }
                     }}
-                    className="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="flex-1 text-xs bg-gray-700 border border-gray-600 rounded px-2 py-1 text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Enter page URL..."
                   />
                   <button
