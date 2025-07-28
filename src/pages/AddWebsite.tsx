@@ -62,7 +62,7 @@ const AddWebsite = () => {
 
           
 
-          <Button type="submit" className="bg-[rgba(28,28,28,1)] text-[rgba(252,251,248,1)] hover:bg-[rgba(28,28,28,0.9)] font-medium py-3 px-6 rounded-lg transition-colors" disabled={!websiteUrl.trim() || !productType.trim()}>
+          <Button type="submit" className="bg-[rgba(28,28,28,1)] text-[rgba(252,251,248,1)] hover:bg-[rgba(28,28,28,0.9)] font-medium py-3 px-6 rounded-lg transition-colors" disabled={!websiteUrl.trim()}>
             Start Analyzing
           </Button>
         </form>
