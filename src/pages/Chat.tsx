@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link, AlertTriangle, RefreshCw } from 'lucide-react';
 import { AnalysisService } from '@/services/AnalysisService';
 import { CUAService, CUASessionResponse } from '@/services/CUAService';
-import { CUAControls } from '@/components/CUAControls';
+
 import { useToast } from '@/components/ui/use-toast';
 
 interface Message {
@@ -540,15 +540,6 @@ Let's start!`,
                     </button>
                   </div>
                 </div>
-              </div>
-              
-              {/* CUA Controls */}
-              <div className="border-b border-neutral-700">
-                <CUAControls 
-                  websiteUrl={currentPageUrl}
-                  websiteId={websiteData?.websiteUrl}
-                  onSessionUpdate={handleCUASessionUpdate}
-                />
               </div>
               
               {/* Website Preview */}
