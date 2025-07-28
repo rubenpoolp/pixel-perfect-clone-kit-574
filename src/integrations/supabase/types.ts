@@ -149,6 +149,306 @@ export type Database = {
           },
         ]
       }
+      cua_ab_tests: {
+        Row: {
+          control_url: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          results: Json | null
+          started_at: string | null
+          statistical_significance: number | null
+          status: string
+          success_metrics: Json
+          test_description: string | null
+          test_duration_days: number
+          test_name: string
+          traffic_split: Json
+          updated_at: string
+          user_id: string | null
+          variant_configs: Json
+          website_id: string | null
+          winning_variant: string | null
+        }
+        Insert: {
+          control_url: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string | null
+          statistical_significance?: number | null
+          status?: string
+          success_metrics: Json
+          test_description?: string | null
+          test_duration_days?: number
+          test_name: string
+          traffic_split?: Json
+          updated_at?: string
+          user_id?: string | null
+          variant_configs: Json
+          website_id?: string | null
+          winning_variant?: string | null
+        }
+        Update: {
+          control_url?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string | null
+          statistical_significance?: number | null
+          status?: string
+          success_metrics?: Json
+          test_description?: string | null
+          test_duration_days?: number
+          test_name?: string
+          traffic_split?: Json
+          updated_at?: string
+          user_id?: string | null
+          variant_configs?: Json
+          website_id?: string | null
+          winning_variant?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cua_ab_tests_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cua_competitive_analysis: {
+        Row: {
+          analysis_results: Json
+          analysis_type: string
+          analyzed_at: string
+          benchmark_score: number | null
+          competitor_url: string
+          created_at: string
+          id: string
+          industry: string | null
+          performance_metrics: Json | null
+          recommendations: Json | null
+          updated_at: string
+          user_id: string | null
+          website_id: string | null
+        }
+        Insert: {
+          analysis_results: Json
+          analysis_type: string
+          analyzed_at?: string
+          benchmark_score?: number | null
+          competitor_url: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          performance_metrics?: Json | null
+          recommendations?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          analysis_results?: Json
+          analysis_type?: string
+          analyzed_at?: string
+          benchmark_score?: number | null
+          competitor_url?: string
+          created_at?: string
+          id?: string
+          industry?: string | null
+          performance_metrics?: Json | null
+          recommendations?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cua_competitive_analysis_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cua_conversion_events: {
+        Row: {
+          ab_test_id: string | null
+          conversion_value: number | null
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          referrer: string | null
+          session_id: string | null
+          timestamp: string
+          url: string
+          user_agent: string | null
+          variant: string | null
+          visitor_id: string
+          website_id: string | null
+        }
+        Insert: {
+          ab_test_id?: string | null
+          conversion_value?: number | null
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          referrer?: string | null
+          session_id?: string | null
+          timestamp?: string
+          url: string
+          user_agent?: string | null
+          variant?: string | null
+          visitor_id: string
+          website_id?: string | null
+        }
+        Update: {
+          ab_test_id?: string | null
+          conversion_value?: number | null
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          referrer?: string | null
+          session_id?: string | null
+          timestamp?: string
+          url?: string
+          user_agent?: string | null
+          variant?: string | null
+          visitor_id?: string
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cua_conversion_events_ab_test_id_fkey"
+            columns: ["ab_test_id"]
+            isOneToOne: false
+            referencedRelation: "cua_ab_tests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cua_conversion_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cua_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cua_conversion_events_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cua_interactions: {
+        Row: {
+          action_data: Json | null
+          action_type: string
+          created_at: string
+          element_selector: string | null
+          error_message: string | null
+          id: string
+          screenshot_url: string | null
+          session_id: string
+          success: boolean
+          timestamp: string
+        }
+        Insert: {
+          action_data?: Json | null
+          action_type: string
+          created_at?: string
+          element_selector?: string | null
+          error_message?: string | null
+          id?: string
+          screenshot_url?: string | null
+          session_id: string
+          success?: boolean
+          timestamp?: string
+        }
+        Update: {
+          action_data?: Json | null
+          action_type?: string
+          created_at?: string
+          element_selector?: string | null
+          error_message?: string | null
+          id?: string
+          screenshot_url?: string | null
+          session_id?: string
+          success?: boolean
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cua_interactions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cua_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cua_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          results: Json | null
+          session_type: string
+          started_at: string
+          status: string
+          target_url: string
+          updated_at: string
+          user_id: string | null
+          website_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          session_type: string
+          started_at?: string
+          status?: string
+          target_url: string
+          updated_at?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          session_type?: string
+          started_at?: string
+          status?: string
+          target_url?: string
+          updated_at?: string
+          user_id?: string | null
+          website_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cua_sessions_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       websites: {
         Row: {
           created_at: string

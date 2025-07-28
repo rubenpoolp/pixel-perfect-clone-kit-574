@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link, AlertTriangle, RefreshCw } from 'lucide-react';
 import { AnalysisService } from '@/services/AnalysisService';
+import { CUAService, CUASessionResponse } from '@/services/CUAService';
+import { CUAControls } from '@/components/CUAControls';
 import { useToast } from '@/components/ui/use-toast';
 
 interface Message {
@@ -47,6 +49,7 @@ const Chat: React.FC<ChatProps> = () => {
   const [iframeLoading, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState('');
+  const [cuaSession, setCuaSession] = useState<CUASessionResponse | null>(null);
 
   const extractPageName = useCallback((url: string): string => {
     try {
@@ -305,6 +308,31 @@ Let's start!`,
     });
   }, [extractPageName, setSearchParams, addMessage, isProblematicUrl, toast]);
 
+  const handleCUASessionUpdate = useCallback((session: CUASessionResponse) => {
+    setCuaSession(session);
+    
+    // Add message when CUA session completes
+    if (session.status === 'completed' && session.results) {
+      const sessionTypeText = session.sessionId.includes('analysis') ? 'analysis' : 
+                             session.sessionId.includes('testing') ? 'testing' :
+                             session.sessionId.includes('optimization') ? 'optimization' : 'competitive analysis';
+      
+      addMessage({
+        content: `🤖 CUA ${sessionTypeText} completed! Here are the key findings:\n\n${
+          session.results.summary || 'Analysis completed successfully.'
+        }`,
+        sender: 'ai',
+        timestamp: new Date(),
+        suggestions: session.results.recommendations?.slice(0, 3) || [
+          'Tell me more about the findings',
+          'What should I prioritize?',
+          'How can I implement these changes?'
+        ],
+        pageContext: currentPageName
+      });
+    }
+  }, [addMessage, currentPageName]);
+
   return (
     <div className="bg-neutral-900 flex flex-col h-screen text-white">
       <div className="flex flex-1 overflow-hidden">
@@ -512,6 +540,15 @@ Let's start!`,
                     </button>
                   </div>
                 </div>
+              </div>
+              
+              {/* CUA Controls */}
+              <div className="border-b border-neutral-700">
+                <CUAControls 
+                  websiteUrl={currentPageUrl}
+                  websiteId={websiteData?.websiteUrl}
+                  onSessionUpdate={handleCUASessionUpdate}
+                />
               </div>
               
               {/* Website Preview */}
