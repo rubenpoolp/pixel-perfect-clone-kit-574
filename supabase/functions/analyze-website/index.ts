@@ -134,30 +134,43 @@ async function generateAIAnalysis({ websiteUrl, currentPage, productType, userQu
       detectedPageType = 'Contact';
     }
 
-    const prompt = `You are an expert UX/UI and conversion rate optimization consultant. I'm showing you a screenshot of a ${detectedPageType} page from a ${productType} website.
+    const prompt = `You are an expert UX/UI and conversion rate optimization consultant analyzing this ${detectedPageType} page screenshot.
 
-Website: ${websiteUrl}
-Page Type: ${detectedPageType}
-Product Type: ${productType}
-Industry: ${industry}
-User Question: ${userQuestion}
+Context:
+- Website: ${websiteUrl}
+- Page Type: ${detectedPageType}
+- Industry: ${industry}
+- User Question: ${userQuestion}
 
-Please analyze this screenshot and provide specific, actionable insights about:
+I need you to analyze EXACTLY what you see in this screenshot and provide specific, visual insights:
 
-1. Visual hierarchy and layout issues
-2. Text readability and clarity 
-3. Call-to-action button placement and design
-4. Trust signals and social proof elements
-5. Navigation and user flow
-6. Mobile responsiveness concerns visible in the design
-7. Color scheme and visual appeal
-8. Specific elements that could be hindering conversions
+VISUAL ANALYSIS INSTRUCTIONS:
+1. Start by describing what you can see: layout, colors, text, buttons, images
+2. Identify the visual hierarchy - what draws attention first, second, third
+3. Point out specific UI elements and their exact locations (top-left, center, bottom-right, etc.)
+4. Mention actual colors you observe (blue buttons, white background, etc.)
+5. Note text sizes, font weights, and readability issues
+6. Identify any trust signals, social proof, or credibility elements visible
+7. Spot navigation issues or confusing layouts
+8. Look for conversion barriers like hidden CTAs, unclear value props, or cluttered design
 
-Focus on what you can actually SEE in the image. Point out specific UI elements, text, buttons, layouts, etc. that need improvement.
+RESPONSE FORMAT:
+🔍 **What I See**: [Brief description of the page layout and key elements]
 
-Be very specific about what you observe and avoid generic advice. Mention specific colors, positions, text, etc. that you see.
+⚠️ **Critical Issues Found**:
+- [Specific issue with exact location/color/element reference]
+- [Another specific issue with visual details]
 
-Keep response under 400 words and make every insight actionable.`;
+💡 **Priority Improvements**:
+1. [Specific actionable change with visual context]
+2. [Another specific change referencing actual elements you see]
+3. [Third priority with specific visual details]
+
+🎯 **Conversion Impact**: [How these specific visual elements affect conversions]
+
+Be extremely specific - reference actual elements, colors, positions, and text you can see. Avoid generic advice. Focus on immediate visual improvements that would boost conversions.
+
+Maximum 350 words. Every recommendation must reference something visually observable in the screenshot.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -221,33 +234,86 @@ Keep response under 400 words and make every insight actionable.`;
   }
 }
 
-// Function to take screenshot using a screenshot service
+// Function to take screenshot with multiple fallback services
 async function takeScreenshot(url: string): Promise<string | null> {
+  const services = [
+    {
+      name: 'htmlcsstoimage',
+      url: `https://hcti.io/v1/image?url=${encodeURIComponent(url)}&viewport_width=1280&viewport_height=720&format=png`,
+      headers: {}
+    },
+    {
+      name: 'urlbox',
+      url: `https://api.urlbox.io/v1/render/png?url=${encodeURIComponent(url)}&width=1280&height=720&format=png`,
+      headers: {}
+    },
+    {
+      name: 'screenshotone',
+      url: `https://api.screenshotone.com/take?url=${encodeURIComponent(url)}&viewport_width=1280&viewport_height=720&format=png&response_type=json`,
+      headers: {}
+    }
+  ];
+
+  for (const service of services) {
+    try {
+      console.log(`Trying ${service.name} for screenshot of:`, url);
+      
+      const response = await fetch(service.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          ...service.headers
+        },
+        timeout: 15000 // 15 second timeout
+      });
+
+      if (response.ok) {
+        let base64Data: string;
+        
+        if (service.name === 'screenshotone') {
+          const jsonResponse = await response.json();
+          if (jsonResponse.image) {
+            base64Data = jsonResponse.image.split(',')[1] || jsonResponse.image;
+          } else {
+            continue;
+          }
+        } else {
+          const buffer = await response.arrayBuffer();
+          base64Data = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+        }
+        
+        console.log(`Screenshot captured successfully with ${service.name}`);
+        return base64Data;
+      } else {
+        console.warn(`${service.name} failed:`, response.status, response.statusText);
+      }
+    } catch (error) {
+      console.warn(`${service.name} error:`, error.message);
+    }
+  }
+
+  // Final fallback - try a simpler approach
   try {
-    console.log('Taking screenshot of:', url);
+    console.log('All services failed, trying direct approach...');
+    const simpleUrl = `https://api.screenshotmachine.com/?key=demo&url=${encodeURIComponent(url)}&dimension=1280x720&format=png`;
     
-    // Using screenshotapi.net as a reliable screenshot service
-    const screenshotUrl = `https://screenshotapi.net/api/v1/screenshot?url=${encodeURIComponent(url)}&width=1280&height=720&output=base64`;
-    
-    const response = await fetch(screenshotUrl, {
+    const response = await fetch(simpleUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+      },
+      timeout: 20000
     });
 
-    if (!response.ok) {
-      console.error('Screenshot service error:', response.status, response.statusText);
-      return null;
+    if (response.ok) {
+      const buffer = await response.arrayBuffer();
+      const base64Data = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      console.log('Screenshot captured with fallback service');
+      return base64Data;
     }
-
-    const base64Data = await response.text();
-    console.log('Screenshot captured successfully');
-    return base64Data;
-
   } catch (error) {
-    console.error('Screenshot error:', error);
-    return null;
+    console.error('All screenshot services failed:', error);
   }
+
+  return null;
 }
 
 function generateFallbackAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType }: {
