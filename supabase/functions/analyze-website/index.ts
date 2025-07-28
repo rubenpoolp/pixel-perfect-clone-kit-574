@@ -172,6 +172,17 @@ Be extremely specific - reference actual elements, colors, positions, and text y
 
 Maximum 350 words. Every recommendation must reference something visually observable in the screenshot.`;
 
+    // Validate screenshot data
+    if (!screenshot || screenshot.length < 100) {
+      console.warn('Invalid screenshot data, falling back to contextual analysis');
+      return await generateContextualAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType, openAIApiKey });
+    }
+
+    console.log(`Screenshot data length: ${screenshot.length} characters`);
+    
+    // Ensure proper base64 format
+    const cleanBase64 = screenshot.replace(/^data:image\/[a-z]+;base64,/, '');
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -183,18 +194,24 @@ Maximum 350 words. Every recommendation must reference something visually observ
         messages: [
           { 
             role: 'system', 
-            content: 'You are a UX/UI and conversion optimization expert. Analyze website screenshots and provide specific, actionable insights based on what you can visually observe. Focus on concrete UI elements, not generic advice.' 
+            content: 'You are a UX/UI and conversion optimization expert analyzing website screenshots. You MUST describe exactly what you see in the image. If you cannot see the image clearly, say so explicitly. Never give generic advice - only comment on what is visually observable.' 
           },
           { 
             role: 'user', 
             content: [
               { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshot}` } }
+              { 
+                type: 'image_url', 
+                image_url: { 
+                  url: `data:image/png;base64,${cleanBase64}`,
+                  detail: "high"
+                }
+              }
             ]
           }
         ],
-        max_tokens: 600,
-        temperature: 0.3,
+        max_tokens: 800,
+        temperature: 0.1,
       }),
     });
 
@@ -202,10 +219,27 @@ Maximum 350 words. Every recommendation must reference something visually observ
     
     if (data.error) {
       console.error('OpenAI API error:', data.error);
-      return generateFallbackAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType });
+      return await generateContextualAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType, openAIApiKey });
+    }
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid OpenAI response structure:', data);
+      return await generateContextualAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType, openAIApiKey });
     }
 
     const aiContent = data.choices[0].message.content;
+    
+    // Check if AI actually saw the image or gave a generic response
+    if (aiContent.toLowerCase().includes("unable to view") || 
+        aiContent.toLowerCase().includes("cannot see") ||
+        aiContent.toLowerCase().includes("i'm sorry") ||
+        aiContent.length < 100) {
+      console.warn('AI could not properly analyze screenshot, falling back to contextual analysis');
+      console.warn('AI response:', aiContent);
+      return await generateContextualAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType, openAIApiKey });
+    }
+    
+    console.log('Screenshot analysis successful, AI provided visual insights');
 
     const suggestions = generatePageSpecificSuggestions(detectedPageType, productType);
     const recommendations = generateRecommendations(detectedPageType, productType);
@@ -281,7 +315,13 @@ async function takeScreenshot(url: string): Promise<string | null> {
           base64Data = btoa(String.fromCharCode(...new Uint8Array(buffer)));
         }
         
-        console.log(`Screenshot captured successfully with ${service.name}`);
+        // Validate the base64 data
+        if (base64Data.length < 1000) {
+          console.warn(`Screenshot too small (${base64Data.length} chars), might be invalid`);
+          continue;
+        }
+        
+        console.log(`Screenshot captured successfully with ${service.name} (${base64Data.length} chars)`);
         return base64Data;
       } else {
         console.warn(`${service.name} failed:`, response.status, response.statusText);
