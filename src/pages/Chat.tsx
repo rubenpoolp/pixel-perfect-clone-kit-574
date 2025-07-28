@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link } from 'lucide-react';
+import { Send, User, Bot, ExternalLink, BarChart3, Users, ShoppingCart, Navigation, ArrowLeft, ArrowRight, RotateCcw, Link, AlertTriangle, RefreshCw } from 'lucide-react';
 import { AnalysisService } from '@/services/AnalysisService';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -44,6 +44,9 @@ const Chat: React.FC<ChatProps> = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(false);
+  const [iframeError, setIframeError] = useState<string | null>(null);
+  const [urlInput, setUrlInput] = useState('');
 
   const extractPageName = useCallback((url: string): string => {
     try {
@@ -143,6 +146,7 @@ const Chat: React.FC<ChatProps> = () => {
       
       setCurrentPageUrl(initialUrl);
       setCurrentPageName(initialPageName);
+      setIframeLoading(true); // Set loading state for initial load
       
       // Update URL to match the current page
       setSearchParams({ page: initialUrl });
@@ -235,6 +239,33 @@ Let's start!`,
     }
   }, [inputMessage, currentPageName, websiteData, addMessage, toast]);
 
+  // Check if URL commonly blocks iframe embedding
+  const isProblematicUrl = useCallback((url: string): boolean => {
+    const problematicDomains = [
+      'google.com', 'youtube.com', 'facebook.com', 'twitter.com', 'linkedin.com',
+      'instagram.com', 'github.com', 'stackoverflow.com', 'reddit.com', 'amazon.com'
+    ];
+    
+    try {
+      const urlObj = new URL(url);
+      return problematicDomains.some(domain => 
+        urlObj.hostname.includes(domain) || urlObj.hostname.endsWith(domain)
+      );
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const handleIframeLoad = useCallback(() => {
+    setIframeLoading(false);
+    setIframeError(null);
+  }, []);
+
+  const handleIframeError = useCallback(() => {
+    setIframeLoading(false);
+    setIframeError('This website cannot be displayed in preview due to security restrictions (X-Frame-Options).');
+  }, []);
+
   const navigateToPage = useCallback((url: string) => {
     // Clean up URL to prevent double slashes and other issues
     let cleanUrl = url.trim();
@@ -247,6 +278,17 @@ Let's start!`,
       cleanUrl = 'https://' + cleanUrl;
     }
     
+    // Check for problematic URLs and warn user
+    if (isProblematicUrl(cleanUrl)) {
+      toast({
+        title: "Preview Limitation",
+        description: "This site may not display in preview due to security restrictions. Analysis will still work!",
+        variant: "default"
+      });
+    }
+    
+    setIframeLoading(true);
+    setIframeError(null);
     setCurrentPageUrl(cleanUrl);
     const pageName = extractPageName(cleanUrl);
     setCurrentPageName(pageName);
@@ -261,7 +303,7 @@ Let's start!`,
       timestamp: new Date(),
       pageContext: pageName
     });
-  }, [extractPageName, setSearchParams, addMessage]);
+  }, [extractPageName, setSearchParams, addMessage, isProblematicUrl, toast]);
 
   return (
     <div className="bg-neutral-900 flex flex-col h-screen text-white">
@@ -474,13 +516,59 @@ Let's start!`,
               
               {/* Website Preview */}
               <div className="flex-1 p-4">
-                <div className="w-full h-full bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden">
+                <div className="w-full h-full bg-neutral-800 rounded-lg border border-neutral-700 overflow-hidden relative">
+                  {/* Loading State */}
+                  {iframeLoading && (
+                    <div className="absolute inset-0 bg-neutral-800 flex items-center justify-center z-10">
+                      <div className="flex flex-col items-center gap-4">
+                        <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+                        <p className="text-gray-300 text-sm">Loading website preview...</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Error State */}
+                  {iframeError && (
+                    <div className="absolute inset-0 bg-neutral-800 flex items-center justify-center z-10 p-8">
+                      <div className="text-center max-w-md">
+                        <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                        <h3 className="text-gray-200 text-lg font-medium mb-3">Preview Not Available</h3>
+                        <p className="text-gray-400 text-sm mb-6 leading-relaxed">{iframeError}</p>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => window.open(currentPageUrl, '_blank')}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Open in New Tab
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIframeError(null);
+                              setIframeLoading(true);
+                              if (iframeRef.current) {
+                                iframeRef.current.src = currentPageUrl;
+                              }
+                            }}
+                            className="w-full bg-neutral-700 hover:bg-neutral-600 text-gray-200 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Try Again
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <iframe
                     ref={iframeRef}
                     src={currentPageUrl}
                     className="w-full h-full"
                     title="Website Preview"
+                    onLoad={handleIframeLoad}
+                    onError={handleIframeError}
                     allow="navigation-top"
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                   />
                 </div>
               </div>

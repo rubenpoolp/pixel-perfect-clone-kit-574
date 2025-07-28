@@ -59,14 +59,30 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in analyze-website function:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      websiteUrl: req.url
+    });
+    
+    // Provide fallback analysis even on error
+    const fallbackAnalysis = generateFallbackAnalysis({
+      websiteUrl: 'unknown',
+      currentPage: 'Homepage',
+      productType: 'website',
+      userQuestion: 'General optimization',
+      industry: 'general',
+      analysisType: 'fallback'
+    });
     
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        message: error.message 
+      JSON.stringify({
+        ...fallbackAnalysis,
+        warning: 'Analysis generated with limited functionality due to technical issues.'
       }),
       { 
-        status: 500, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

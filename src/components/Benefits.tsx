@@ -51,12 +51,12 @@ export const Benefits: React.FC<BenefitsProps> = ({ className = '' }) => {
       <div className="self-center w-full max-w-[1362px] mt-12 sm:mt-16 lg:mt-20 max-md:max-w-full">
         <div className="gap-5 flex max-md:flex-col max-md:items-stretch">
           {benefits.map((benefit, index) => (
-            <React.Fragment key={index}>
+            <div key={index} className="contents">
               <Benefit emoji={benefit.emoji} title={benefit.title} />
               {index < benefits.length - 1 && (
                 <div className="ml-5 max-md:ml-0" />
               )}
-            </React.Fragment>
+            </div>
           ))}
         </div>
       </div>
