@@ -57,7 +57,7 @@ const AddWebsite = () => {
             <label htmlFor="website-url" className="block text-[rgba(28,28,28,1)] text-sm font-medium mb-2">
               URL of the Page
             </label>
-            <input id="website-url" type="url" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="w-full bg-white border border-[rgba(28,28,28,0.2)] rounded-lg px-4 py-3 text-[rgba(28,28,28,1)] placeholder-[rgba(95,95,93,1)] focus:outline-none focus:ring-2 focus:ring-[rgba(28,28,28,0.3)] focus:border-transparent" placeholder="https://your-website.com" required />
+            <input id="website-url" type="text" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="w-full bg-white border border-[rgba(28,28,28,0.2)] rounded-lg px-4 py-3 text-[rgba(28,28,28,1)] placeholder-[rgba(95,95,93,1)] focus:outline-none focus:ring-2 focus:ring-[rgba(28,28,28,0.3)] focus:border-transparent" placeholder="google.com" required />
           </div>
 
           
