@@ -520,7 +520,7 @@ Let's start!`,
                   </div>
                   <div className="flex gap-2">
                     <input
-                      type="url"
+                      type="text"
                       value={currentPageUrl}
                       onChange={(e) => setCurrentPageUrl(e.target.value)}
                       onKeyDown={(e) => {
