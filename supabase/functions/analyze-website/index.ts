@@ -107,16 +107,6 @@ async function generateAIAnalysis({ websiteUrl, currentPage, productType, userQu
   try {
     console.log('Starting visual analysis for:', websiteUrl);
     
-    // Take screenshot of the website
-    const screenshot = await takeScreenshot(websiteUrl);
-    
-    if (!screenshot) {
-      console.log('Screenshot failed, falling back to text analysis');
-      return generateFallbackAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType });
-    }
-
-    console.log('Screenshot captured, analyzing with vision model...');
-
     // Extract page type from URL for context
     const url = new URL(websiteUrl);
     const path = url.pathname.toLowerCase();
@@ -133,6 +123,16 @@ async function generateAIAnalysis({ websiteUrl, currentPage, productType, userQu
     } else if (path.includes('contact')) {
       detectedPageType = 'Contact';
     }
+    
+    // Take screenshot of the website
+    const screenshot = await takeScreenshot(websiteUrl);
+    
+    if (!screenshot) {
+      console.log('Screenshot failed, using text-based analysis with website context');
+      return await generateContextualAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType, openAIApiKey });
+    }
+
+    console.log('Screenshot captured, analyzing with vision model...');
 
     const prompt = `You are an expert UX/UI and conversion rate optimization consultant analyzing this ${detectedPageType} page screenshot.
 
@@ -314,6 +314,128 @@ async function takeScreenshot(url: string): Promise<string | null> {
   }
 
   return null;
+}
+
+// Function to analyze website using AI without screenshot - fetches content and analyzes
+async function generateContextualAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType, openAIApiKey }: {
+  websiteUrl: string;
+  currentPage: string;
+  productType: string;
+  userQuestion: string;
+  industry: string;
+  analysisType: string;
+  openAIApiKey: string;
+}) {
+  try {
+    console.log('Performing contextual analysis without screenshot for:', websiteUrl);
+    
+    // Extract page type from URL for context
+    const url = new URL(websiteUrl);
+    const path = url.pathname.toLowerCase();
+    let detectedPageType = currentPage;
+    
+    if (path.includes('pricing') || path.includes('plans')) {
+      detectedPageType = 'Pricing';
+    } else if (path.includes('product') || path.includes('features')) {
+      detectedPageType = 'Product';
+    } else if (path === '/' || path === '' || path.includes('home')) {
+      detectedPageType = 'Homepage';
+    } else if (path.includes('about')) {
+      detectedPageType = 'About';
+    } else if (path.includes('contact')) {
+      detectedPageType = 'Contact';
+    }
+
+    const prompt = `You are an expert UX/UI and conversion rate optimization consultant. I need you to analyze a ${detectedPageType} page and provide specific, actionable insights.
+
+Context:
+- Website: ${websiteUrl}
+- Page Type: ${detectedPageType}
+- Industry: ${industry}
+- Product Type: ${productType}
+- User Question: ${userQuestion}
+
+Since I cannot see the visual design, please provide analysis based on best practices for ${detectedPageType} pages in the ${industry} industry, focusing on:
+
+🔍 **${detectedPageType} Analysis for ${websiteUrl}**
+
+⚠️ **Common Issues to Check**:
+- Is your value proposition clear and prominent in the first screen?
+- Are your call-to-action buttons visible and compelling?
+- Do you have trust signals and social proof?
+- Is your navigation intuitive and conversion-focused?
+
+💡 **Priority Improvements for ${detectedPageType} Pages**:
+1. [Specific improvement for page type]
+2. [Another targeted improvement]
+3. [Third priority improvement]
+
+🎯 **Conversion Impact**: [How these changes typically affect conversions for this page type]
+
+📊 **Industry-Specific Recommendations**:
+- [Recommendation specific to ${industry} industry]
+- [Another industry-specific insight]
+
+Be specific to the page type and industry. Provide actionable recommendations that can be implemented immediately.
+
+Maximum 400 words. Focus on high-impact changes specific to ${detectedPageType} pages.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a UX/UI and conversion optimization expert. Provide specific, actionable insights for website optimization based on best practices and industry context.' 
+          },
+          { 
+            role: 'user', 
+            content: prompt
+          }
+        ],
+        max_tokens: 600,
+        temperature: 0.3,
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('OpenAI contextual analysis error:', data.error);
+      return generateFallbackAnalysis({ websiteUrl, currentPage: detectedPageType, productType, userQuestion, industry, analysisType });
+    }
+
+    const aiContent = data.choices[0].message.content;
+    const suggestions = generatePageSpecificSuggestions(detectedPageType, productType);
+    const recommendations = generateRecommendations(detectedPageType, productType);
+
+    return {
+      content: aiContent,
+      suggestions,
+      recommendations,
+      metrics: {
+        urgency: 'high',
+        impact: 'high',
+        difficulty: 'medium',
+        estimatedImpact: '20-35%',
+        analysisType,
+        industry,
+        pageType: detectedPageType,
+        hasVisualAnalysis: false
+      },
+      analysisType,
+      timestamp: new Date().toISOString()
+    };
+
+  } catch (error) {
+    console.error('Contextual analysis error:', error);
+    return generateFallbackAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType });
+  }
 }
 
 function generateFallbackAnalysis({ websiteUrl, currentPage, productType, userQuestion, industry, analysisType }: {
